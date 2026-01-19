@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文化演化賽局</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>文化演化賽局</h1>
+            <p class="subtitle" id="game-phase">遊戲設置</p>
+        </header>
+
+        <main>
+            <!-- 設定畫面 -->
+            <section id="screen-setup">
+                <div class="setup-form">
+                    <label>玩家人數</label>
+                    <select id="player-count">
+                        <option value="1">1 人（練習）</option>
+                        <option value="2">2 人（練習）</option>
+                        <option value="3" selected>3 人</option>
+                        <option value="4">4 人</option>
+                        <option value="5">5 人</option>
+                    </select>
+                </div>
+                <div id="player-names"></div>
+                <button id="start-btn" class="btn-primary">開始遊戲</button>
+            </section>
+
+            <!-- 事件畫面 -->
+            <section id="screen-event" class="hidden">
+                <div class="event-box">
+                    <p class="event-round">第 <span id="event-round">1</span> 回合</p>
+                    <div class="event-icon" id="event-icon">🌵</div>
+                    <h2 id="event-name">乾季來臨</h2>
+                    <p class="event-desc" id="event-desc">消化回報 ×1.5</p>
+                    <button id="event-continue-btn" class="btn-primary">繼續</button>
+                </div>
+            </section>
+
+            <!-- 交接畫面 -->
+            <section id="screen-handover" class="hidden">
+                <div class="handover-box">
+                    <p>請將裝置交給</p>
+                    <h2 id="next-player-name">部落 1</h2>
+                    <button id="ready-btn" class="btn-primary">我準備好了</button>
+                </div>
+            </section>
+
+            <!-- 投資畫面 -->
+            <section id="screen-invest" class="hidden">
+                <div class="current-player-info">
+                    <span id="current-player-label">部落 1</span>
+                    <span>第 <strong id="round-number">1</strong> 回合</span>
+                </div>
+
+                <div class="energy-info">
+                    <span>可用能量: <strong id="total-energy">10</strong></span>
+                    <span>保留: <strong id="reserved-energy">10</strong></span>
+                </div>
+
+                <div class="investment-area" data-type="brain">
+                    <h2>發展大腦 <span class="multiplier-badge hidden" id="mult-brain">×1.5</span></h2>
+                    <p class="cost-hint">每 2 能量 = 1 張技術卡</p>
+                    <div class="slider-row">
+                        <input type="range" id="slider-brain" min="0" max="10" value="0">
+                        <span class="slider-value" id="value-brain">0</span>
+                    </div>
+                    <p class="reward-preview">→ 預估抽卡: <strong id="reward-brain">0</strong> 張</p>
+                </div>
+
+                <div class="investment-area" data-type="guts">
+                    <h2>維護消化 <span class="multiplier-badge hidden" id="mult-guts">×1.5</span></h2>
+                    <p class="cost-hint">每 3 能量 = +2 下回合能量</p>
+                    <div class="slider-row">
+                        <input type="range" id="slider-guts" min="0" max="10" value="0">
+                        <span class="slider-value" id="value-guts">0</span>
+                    </div>
+                    <p class="reward-preview">→ 預估能量: <strong id="reward-guts">+0</strong></p>
+                </div>
+
+                <div class="investment-area" data-type="muscle">
+                    <h2>強化肌肉 <span class="multiplier-badge hidden" id="mult-muscle">×1.5</span></h2>
+                    <p class="cost-hint">每 2 能量 = 1 行動點</p>
+                    <div class="slider-row">
+                        <input type="range" id="slider-muscle" min="0" max="10" value="0">
+                        <span class="slider-value" id="value-muscle">0</span>
+                    </div>
+                    <p class="reward-preview">→ 預估行動: <strong id="reward-muscle">0</strong> 點</p>
+                </div>
+
+                <div id="warning" class="warning hidden">超出預算！請減少投資。</div>
+                <button id="confirm-btn" class="btn-primary">確認投資</button>
+            </section>
+
+            <!-- 個人結果畫面 -->
+            <section id="screen-personal-result" class="hidden">
+                <div class="personal-result-box">
+                    <h2 id="personal-player-name">部落 1</h2>
+                    <p class="subtitle">投資結果</p>
+                    <ul class="personal-result-list">
+                        <li>發展大腦: <strong id="personal-brain">0</strong> → 技術卡 <strong id="personal-cards">0</strong> 張
+                        </li>
+                        <li>維護消化: <strong id="personal-guts">0</strong> → 能量 <strong id="personal-energy">+0</strong>
+                        </li>
+                        <li>強化肌肉: <strong id="personal-muscle">0</strong> → 行動點 <strong id="personal-ap">0</strong></li>
+                        <li>保留能量: <strong id="personal-reserved">0</strong></li>
+                        <li>下回合可用: <strong id="personal-next-total">0</strong></li>
+                    </ul>
+                    <button id="next-player-btn" class="btn-primary">交給下一位</button>
+                </div>
+            </section>
+
+            <!-- 結算畫面 -->
+            <section id="screen-result" class="hidden">
+                <h2>第 <span id="result-round">1</span> 回合結算</h2>
+                <div class="result-table-wrapper">
+                    <table id="result-table">
+                        <thead>
+                            <tr>
+                                <th>部落</th>
+                                <th>大腦</th>
+                                <th>消化</th>
+                                <th>肌肉</th>
+                                <th>卡牌</th>
+                                <th>收益</th>
+                                <th>保留</th>
+                                <th>總可用</th>
+                                <th>行動</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-body"></tbody>
+                    </table>
+                </div>
+                <button id="next-round-btn" class="btn-primary">下一回合</button>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

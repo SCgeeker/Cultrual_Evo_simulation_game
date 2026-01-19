@@ -1,0 +1,390 @@
+:root {
+    --bg-dark: #1a1a2e;
+    --bg-card: #16213e;
+    --accent: #e94560;
+    --accent-light: #ff6b6b;
+    --text: #eaeaea;
+    --text-muted: #a0a0a0;
+    --brain-color: #4facfe;
+    --guts-color: #00f260;
+    --muscle-color: #ff6b6b;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg-dark);
+    color: var(--text);
+    font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+#app {
+    width: 100%;
+    max-width: 480px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.energy-info {
+    display: flex;
+    justify-content: space-between;
+    background: var(--bg-card);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.investment-area {
+    background: var(--bg-card);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--accent);
+}
+
+.investment-area[data-type="brain"] {
+    border-color: var(--brain-color);
+}
+
+.investment-area[data-type="guts"] {
+    border-color: var(--guts-color);
+}
+
+.investment-area[data-type="muscle"] {
+    border-color: var(--muscle-color);
+}
+
+.investment-area h2 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.cost-hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+}
+
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.slider-row input[type="range"] {
+    flex: 1;
+    height: 8px;
+    -webkit-appearance: none;
+    background: #333;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.slider-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    min-width: 2ch;
+    text-align: right;
+}
+
+.reward-preview {
+    margin-top: 8px;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.reward-preview strong {
+    color: var(--text);
+}
+
+.warning {
+    background: #ff4444;
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.btn-primary,
+.btn-secondary {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--accent-light);
+}
+
+.btn-primary:disabled {
+    background: #555;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #333;
+    color: var(--text);
+    margin-top: 12px;
+}
+
+.btn-secondary:hover {
+    background: #444;
+}
+
+.result {
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.result h2 {
+    text-align: center;
+    margin-bottom: 16px;
+    color: var(--accent);
+}
+
+.result ul {
+    list-style: none;
+}
+
+.result li {
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    font-size: 1.05rem;
+}
+
+.result li:last-child {
+    border-bottom: none;
+}
+
+.result strong {
+    float: right;
+    color: var(--accent);
+}
+
+/* Phase 2 新增樣式 */
+.setup-form {
+    margin-bottom: 16px;
+}
+
+.setup-form label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+}
+
+.setup-form select,
+.setup-form input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text);
+}
+
+.handover-box {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.handover-box p {
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.handover-box h2 {
+    font-size: 2rem;
+    margin-bottom: 32px;
+    color: var(--accent);
+}
+
+.current-player-info {
+    display: flex;
+    justify-content: space-between;
+    background: var(--bg-card);
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 1rem;
+}
+
+.current-player-info span:first-child {
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.result-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+#result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+#result-table th,
+#result-table td {
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+}
+
+#result-table th {
+    background: var(--accent);
+    color: white;
+}
+
+#result-table td:first-child {
+    text-align: left;
+    font-weight: bold;
+}
+
+/* 個人結果畫面 */
+.personal-result-box {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.personal-result-box h2 {
+    font-size: 1.8rem;
+    color: var(--accent);
+    margin-bottom: 8px;
+}
+
+.personal-result-list {
+    list-style: none;
+    text-align: left;
+    background: var(--bg-card);
+    padding: 16px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.personal-result-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid #333;
+    font-size: 1rem;
+}
+
+.personal-result-list li:last-child {
+    border-bottom: none;
+}
+
+.personal-result-list strong {
+    color: var(--accent);
+}
+
+/* 事件畫面 */
+.event-box {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.event-round {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.event-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+
+.event-box h2 {
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+}
+
+.event-desc {
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin-bottom: 32px;
+}
+
+/* 乘數標籤 */
+.multiplier-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-left: 8px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+[data-type="brain"] .multiplier-badge {
+    background: var(--brain-color);
+    color: #000;
+}
+
+[data-type="guts"] .multiplier-badge {
+    background: var(--guts-color);
+    color: #000;
+}
+
+[data-type="muscle"] .multiplier-badge {
+    background: var(--muscle-color);
+    color: #000;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
