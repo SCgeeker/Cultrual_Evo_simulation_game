@@ -28,6 +28,15 @@
                         <option value="5">5 人</option>
                     </select>
                 </div>
+                <div class="setup-form">
+                    <label>遊戲長度 (回合)</label>
+                    <select id="max-rounds">
+                        <option value="10">10 回合 (快速)</option>
+                        <option value="20" selected>20 回合 (標準)</option>
+                        <option value="30">30 回合 (長局)</option>
+                        <option value="5">5 回合 (測試)</option>
+                    </select>
+                </div>
                 <div id="player-names"></div>
                 <button id="start-btn" class="btn-primary">開始遊戲</button>
             </section>
@@ -66,7 +75,7 @@
 
                 <div class="investment-area" data-type="brain">
                     <h2>發展大腦 <span class="multiplier-badge hidden" id="mult-brain">×1.5</span></h2>
-                    <p class="cost-hint">每 2 能量 = 1 張技術卡</p>
+                    <p class="cost-hint">每 2 能量 = 1 張技術卡 (未滿 2 無效)</p>
                     <div class="slider-row">
                         <input type="range" id="slider-brain" min="0" max="10" value="0">
                         <span class="slider-value" id="value-brain">0</span>
@@ -76,7 +85,7 @@
 
                 <div class="investment-area" data-type="guts">
                     <h2>維護消化 <span class="multiplier-badge hidden" id="mult-guts">×1.5</span></h2>
-                    <p class="cost-hint">每 3 能量 = +2 下回合能量</p>
+                    <p class="cost-hint">每 3 能量 = +2 下回合能量 (未滿 3 無效)</p>
                     <div class="slider-row">
                         <input type="range" id="slider-guts" min="0" max="10" value="0">
                         <span class="slider-value" id="value-guts">0</span>
@@ -86,16 +95,72 @@
 
                 <div class="investment-area" data-type="muscle">
                     <h2>強化肌肉 <span class="multiplier-badge hidden" id="mult-muscle">×1.5</span></h2>
-                    <p class="cost-hint">每 2 能量 = 1 行動點</p>
+                    <p class="cost-hint">每 2 能量 = 1 行動點 (未滿 2 無效)</p>
                     <div class="slider-row">
                         <input type="range" id="slider-muscle" min="0" max="10" value="0">
                         <span class="slider-value" id="value-muscle">0</span>
                     </div>
                     <p class="reward-preview">→ 預估行動: <strong id="reward-muscle">0</strong> 點</p>
+                    <p class="total-forecast">下回合總能量預估: <strong id="forecast-total">10</strong></p>
                 </div>
 
                 <div id="warning" class="warning hidden">超出預算！請減少投資。</div>
                 <button id="confirm-btn" class="btn-primary">確認投資</button>
+            </section>
+
+            <!-- 行動決策畫面 (多人) -->
+            <section id="screen-action" class="hidden">
+                <div class="action-box">
+                    <p class="subtitle">行動階段 (未使用的 AP 將保留)</p>
+                    <h2 id="action-player-name">部落 1</h2>
+
+                    <div class="ap-display">
+                        可用行動點: <strong id="current-ap">0</strong>
+                    </div>
+
+                    <div class="action-options">
+                        <div class="action-card" id="btn-hunt">
+                            <div class="icon">🏹</div>
+                            <h3>狩獵</h3>
+                            <p>消耗 1 AP</p>
+                            <p class="effect">獲得 +1 能量</p>
+                        </div>
+
+                        <div class="action-card" id="btn-defend">
+                            <div class="icon">🛡️</div>
+                            <h3>防禦</h3>
+                            <p>消耗 1 AP</p>
+                            <p class="effect">抵消 1 次掠奪</p>
+                        </div>
+
+                        <div class="action-card disabled" id="group-plunder">
+                            <div class="icon">⚔️</div>
+                            <h3>掠奪</h3>
+                            <p>消耗 1 AP</p>
+                            <p class="effect">搶奪對手 2 能量</p>
+                            <div id="plunder-targets" class="target-list">
+                                <!-- 動態生成對手按鈕 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="reset-action-btn" class="btn-secondary">重置分配</button>
+                    <button id="end-action-btn" class="btn-primary">確認行動</button>
+                </div>
+            </section>
+
+            <!-- 行動說明畫面 (單人練習) -->
+            <section id="screen-action-info" class="hidden">
+                <div class="action-box">
+                    <h2>行動點數 (Muscle)</h2>
+                    <p class="desc-text">
+                        您獲得了 <strong id="info-ap">0</strong> 點行動點。<br><br>
+                        在多人模式中，您可以消耗行動點來：<br>
+                        1. <strong>狩獵</strong>：從環境獲得額外能量。<br>
+                        2. <strong>掠奪</strong>：搶奪其他玩家的能量。
+                    </p>
+                    <button id="info-confirm-btn" class="btn-primary">了解</button>
+                </div>
             </section>
 
             <!-- 個人結果畫面 -->
@@ -131,13 +196,41 @@
                                 <th>收益</th>
                                 <th>保留</th>
                                 <th>總可用</th>
-                                <th>行動</th>
                             </tr>
                         </thead>
                         <tbody id="result-body"></tbody>
                     </table>
                 </div>
                 <button id="next-round-btn" class="btn-primary">下一回合</button>
+            </section>
+
+            <!-- 遊戲結束畫面 -->
+            <section id="screen-game-over" class="hidden">
+                <div class="game-over-box">
+                    <div class="trophy">🏆</div>
+                    <p class="subtitle">文化演化最終王者</p>
+                    <h2 id="winner-name">部落 1</h2>
+                    <p class="winner-stat">累積技術卡: <strong id="winner-score">0</strong> 張</p>
+
+                    <div class="result-table-wrapper">
+                        <table id="final-rank-table">
+                            <thead>
+                                <tr>
+                                    <th>排名</th>
+                                    <th>部落</th>
+                                    <th>技術卡 (分數)</th>
+                                    <th>總能量</th>
+                                    <th>行動點</th>
+                                </tr>
+                            </thead>
+                            <tbody id="final-rank-body"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="restart-btn" class="btn-primary">重新開始</button>
+                    </div>
+                </div>
             </section>
         </main>
     </div>

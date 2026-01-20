@@ -388,3 +388,183 @@ header h1 {
         opacity: 0.7;
     }
 }
+
+/* 遊戲結束畫面 */
+.game-over-box {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--accent);
+}
+
+.trophy {
+    font-size: 5rem;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 10px gold);
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.game-over-box h2 {
+    font-size: 2.5rem;
+    color: var(--accent);
+    margin: 10px 0;
+    text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+}
+
+.winner-stat {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 30px;
+}
+
+.winner-stat strong {
+    color: var(--brain-color);
+    font-size: 1.5rem;
+}
+
+#final-rank-table {
+    width: 100%;
+    margin-bottom: 30px;
+    border-collapse: collapse;
+}
+
+#final-rank-table th {
+    background: #2a2a4a;
+    padding: 12px;
+    color: var(--accent);
+}
+
+#final-rank-table td {
+    padding: 12px;
+    border-bottom: 1px solid #333;
+}
+
+#final-rank-table tr:first-child td {
+    font-weight: bold;
+    color: var(--accent);
+    background: rgba(233, 69, 96, 0.1);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.action-buttons button {
+    max-width: 200px;
+}
+
+/* 行動階段畫面 */
+.action-box {
+    text-align: center;
+    padding: 20px;
+}
+
+.ap-display {
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+    color: var(--muscle-color);
+}
+
+.action-options {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.action-card {
+    background: var(--bg-card);
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    width: 200px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-card:hover:not(.disabled) {
+    border-color: var(--accent);
+    transform: translateY(-5px);
+}
+
+.action-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+.action-card .icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.action-card h3 {
+    color: var(--accent);
+    margin-bottom: 8px;
+}
+
+.action-card .effect {
+    color: var(--guts-color);
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.target-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-target {
+    background: #333;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-target:hover {
+    background: var(--accent);
+}
+
+.energy-badge {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.desc-text {
+    text-align: left;
+    line-height: 1.6;
+    margin: 20px 0;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.desc-text strong {
+    color: var(--text);
+}
