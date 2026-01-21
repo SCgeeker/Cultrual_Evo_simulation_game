@@ -118,7 +118,15 @@
                         可用行動點: <strong id="current-ap">0</strong>
                     </div>
 
-                    <div class="action-options">
+                    <!-- 頁籤切換 -->
+                    <div class="action-tabs">
+                        <button class="tab-btn active" data-tab="actions">⚔️ 行動</button>
+                        <button class="tab-btn" data-tab="tech-tree">🧬 技術升級</button>
+                    </div>
+
+                    <!-- 行動選項頁籤 -->
+                    <div class="tab-content active" id="tab-actions">
+                        <div class="action-options">
                         <div class="action-card" id="btn-hunt">
                             <div class="icon">🏹</div>
                             <h3>狩獵</h3>
@@ -142,12 +150,54 @@
                                 <!-- 動態生成對手按鈕 -->
                             </div>
                         </div>
-                    </div>
+                        </div>
+                    </div><!-- 結束 tab-actions -->
+
+                    <!-- 技術樹頁籤 -->
+                    <div class="tab-content" id="tab-tech-tree">
+                        <div class="tech-tree-panel">
+                            <p class="tech-tree-hint">消耗 AP 解鎖技術，獲得永久效果</p>
+                            <div class="tech-paths" id="tech-paths-container">
+                                <!-- 動態生成四條技術路徑 -->
+                            </div>
+                        </div>
+                    </div><!-- 結束 tab-tech-tree -->
 
                     <button id="reset-action-btn" class="btn-secondary">重置分配</button>
                     <button id="end-action-btn" class="btn-primary">確認行動</button>
                 </div>
             </section>
+
+            <!-- 技術卡詳情彈窗 -->
+            <div id="tech-modal" class="modal hidden">
+                <div class="modal-content tech-modal-content">
+                    <div class="tech-modal-header">
+                        <span class="tech-modal-icon" id="modal-tech-icon">🔥</span>
+                        <div class="tech-modal-title-area">
+                            <h2 id="modal-tech-name">火的控制</h2>
+                            <span class="tech-modal-path" id="modal-tech-path">外部消化路線</span>
+                        </div>
+                        <button class="modal-close" id="modal-close-btn">&times;</button>
+                    </div>
+                    <div class="tech-modal-body">
+                        <p class="tech-description" id="modal-tech-desc">掌握火焰，開啟人類演化的關鍵一步</p>
+                        <p class="tech-flavor" id="modal-tech-flavor">火讓我們能在夜間活動...</p>
+                        <div class="tech-effects" id="modal-tech-effects">
+                            <!-- 動態生成效果列表 -->
+                        </div>
+                        <div class="tech-requirements" id="modal-tech-requirements">
+                            <!-- 動態生成前置需求 -->
+                        </div>
+                    </div>
+                    <div class="tech-modal-footer">
+                        <div class="tech-cost">
+                            <span>升級成本:</span>
+                            <strong id="modal-tech-cost">2 AP</strong>
+                        </div>
+                        <button id="modal-unlock-btn" class="btn-primary">解鎖技術</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 行動說明畫面 (單人練習) -->
             <section id="screen-action-info" class="hidden">

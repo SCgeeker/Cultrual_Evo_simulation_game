@@ -16,13 +16,288 @@ const EVENTS = [
     { id: 'stable', name: '穩定發展', icon: '⚖️', desc: '所有回報 ×1.2', effect: { brain: 1.2, guts: 1.2, muscle: 1.2 } }
 ];
 
-// === 技術卡資料 (簡單實作) ===
-const TECH_CARDS = [
-    { id: 'agriculture', name: '農業發展', type: 'passive', desc: '解鎖行動 [農耕]' },
-    { id: 'pottery', name: '陶器製作', type: 'passive', desc: '作為文化標誌' },
-    { id: 'weaving', name: '紡織技術', type: 'passive', desc: '作為文化標誌' },
-    { id: 'mining', name: '礦產開發', type: 'passive', desc: '作為文化標誌' }
-];
+// === 技術路徑資料 (AP 成本制) ===
+// 基於《The Secret of Our Success》理論設計
+const TECH_PATHS = {
+    // 路徑 A：外部消化路線 🔥
+    digestion: {
+        id: 'digestion',
+        name: '外部消化路線',
+        icon: '🔥',
+        description: '透過火與烹飪降低消化成本，提升能量效率',
+        techs: ['fire_control', 'cooking', 'food_preservation', 'artifacts']
+    },
+    // 路徑 B：工具製作路線 🪨
+    tools: {
+        id: 'tools',
+        name: '工具製作路線',
+        icon: '🪨',
+        description: '製作工具增強身體能力，提升投資報酬',
+        techs: ['stone_tools', 'spear_hunting', 'complex_tools', 'artifacts']
+    },
+    // 路徑 C：社會學習路線 🗣️
+    social: {
+        id: 'social',
+        name: '社會學習路線',
+        icon: '🗣️',
+        description: '發展語言與社會組織，解鎖合作與競爭行動',
+        techs: ['language', 'group_identity', 'oral_tradition', 'teaching_system'],
+        branches: {
+            // 從 group_identity 分支出的額外路徑
+            norms: { after: 'group_identity', techs: ['social_norms'] }
+        }
+    },
+    // 路徑 D：環境知識路線 🌿
+    environment: {
+        id: 'environment',
+        name: '環境知識路線',
+        icon: '🌿',
+        description: '累積環境知識，提升採集效率與適應能力',
+        techs: ['gathering_knowledge', 'folk_biology', 'environmental_adaptation', 'information_resources']
+    }
+};
+
+// === 技術卡資料 (AP 成本制) ===
+const TECH_CARDS = {
+    // ===== 路徑 A：外部消化路線 =====
+    fire_control: {
+        id: 'fire_control',
+        name: '火的控制',
+        path: 'digestion',
+        tier: 1,
+        cost: 2,
+        icon: '🔥',
+        effects: {
+            digestionReduction: 0.20,  // 消化成本 -20%
+            brainBonus: 0.10           // 大腦投資回報 +10%
+        },
+        description: '掌握火焰，開啟人類演化的關鍵一步',
+        flavorText: '火讓我們能在夜間活動，驅趕掠食者，更重要的是——烹飪食物。'
+    },
+    cooking: {
+        id: 'cooking',
+        name: '烹飪技術',
+        path: 'digestion',
+        tier: 2,
+        cost: 3,
+        requires: ['fire_control'],
+        icon: '🍖',
+        effects: {
+            digestionReduction: 0.30,  // 消化成本再 -30%
+            energyCapBonus: 3          // 能量上限 +3
+        },
+        description: '烹飪讓食物更容易消化，釋放更多能量',
+        flavorText: '熟食革命：我們的祖先開始用更少的腸道，換取更大的大腦。'
+    },
+    food_preservation: {
+        id: 'food_preservation',
+        name: '食物保存',
+        path: 'digestion',
+        tier: 3,
+        cost: 5,
+        requires: ['cooking'],
+        icon: '🧂',
+        effects: {
+            unlimitedStorage: true,    // 無限儲能
+            digestionReduction: 1.0    // 消化需求歸零
+        },
+        unlocksAction: 'farming',      // 解鎖農耕行動
+        description: '醃製、風乾、發酵——食物不再受限於當下',
+        flavorText: '能夠儲存食物，意味著我們能夠規劃未來。'
+    },
+    artifacts: {
+        id: 'artifacts',
+        name: '人造物系統',
+        path: 'digestion', // 也屬於 tools 路徑的終點
+        tier: 4,
+        cost: 8,
+        requires: ['food_preservation', 'complex_tools'], // 需要兩條路徑匯聚（任一即可）
+        requiresAny: true, // 標記為「任一前置」而非「全部前置」
+        icon: '🏛️',
+        effects: {
+            passiveEnergy: 5,          // 每回合 +5 能量
+            muscleReduction: 0.50      // 肌肉投資成本減半
+        },
+        description: '建築、器具、機械——人造環境取代自然選擇',
+        flavorText: '我們不再適應環境，而是讓環境適應我們。'
+    },
+
+    // ===== 路徑 B：工具製作路線 =====
+    stone_tools: {
+        id: 'stone_tools',
+        name: '石器製作',
+        path: 'tools',
+        tier: 1,
+        cost: 2,
+        icon: '🪨',
+        effects: {
+            freeMuscleInvestment: 1    // 每回合免費 +1 肌肉投資點
+        },
+        description: '最早的技術：將石頭變成延伸的手臂',
+        flavorText: '奧杜威石器，250萬年前的發明，至今仍影響著我們。'
+    },
+    spear_hunting: {
+        id: 'spear_hunting',
+        name: '長矛狩獵',
+        path: 'tools',
+        tier: 2,
+        cost: 3,
+        requires: ['stone_tools'],
+        icon: '🏹',
+        effects: {
+            huntingBonus: 1            // 狩獵行動額外 +1 能量
+        },
+        unlocksAction: 'enhanced_hunt', // 強化狩獵
+        description: '遠距離武器改變了狩獵的遊戲規則',
+        flavorText: '不再需要近身搏鬥，人類成為最危險的掠食者。'
+    },
+    complex_tools: {
+        id: 'complex_tools',
+        name: '複雜工具',
+        path: 'tools',
+        tier: 3,
+        cost: 5,
+        requires: ['spear_hunting'],
+        icon: '⚒️',
+        effects: {
+            investmentBonus: 0.20      // 所有投資報酬 +20%
+        },
+        description: '組合多種材料，創造功能更強大的工具',
+        flavorText: '弓箭、陷阱、漁網——複合工具標誌著認知革命。'
+    },
+
+    // ===== 路徑 C：社會學習路線 =====
+    language: {
+        id: 'language',
+        name: '語言 Lv.1',
+        path: 'social',
+        tier: 1,
+        cost: 2,
+        icon: '💬',
+        effects: {
+            canViewInvestment: 1       // 可查看 1 位玩家的投資分配
+        },
+        description: '符號與聲音的組合，開啟資訊傳遞的新紀元',
+        flavorText: '語言讓我們能夠分享不在眼前的事物——過去、未來、想像。'
+    },
+    group_identity: {
+        id: 'group_identity',
+        name: '族群認同',
+        path: 'social',
+        tier: 2,
+        cost: 3,
+        requires: ['language'],
+        icon: '🏳️',
+        effects: {
+            canAlly: true              // 可與一位玩家結盟
+        },
+        unlocksAction: ['plunder', 'defend', 'alliance'], // 解鎖掠奪、防禦、結盟
+        description: '「我們」與「他們」的區分，合作與競爭的起點',
+        flavorText: '部落標誌、方言、儀式——這些都在說：我們是一體的。'
+    },
+    oral_tradition: {
+        id: 'oral_tradition',
+        name: '口語傳承',
+        path: 'social',
+        tier: 3,
+        cost: 5,
+        requires: ['group_identity'],
+        icon: '📖',
+        effects: {
+            techEffectBonus: 0.50      // 技術卡效果 +50%
+        },
+        description: '故事、歌謠、諺語——知識跨越世代流傳',
+        flavorText: '沒有文字的時代，長老的記憶就是部落的圖書館。'
+    },
+    social_norms: {
+        id: 'social_norms',
+        name: '社會規範',
+        path: 'social',
+        tier: 3, // 與 oral_tradition 同層，但從 group_identity 分支
+        cost: 5,
+        requires: ['group_identity'],
+        icon: '⚖️',
+        effects: {
+            canPunish: true            // 可懲罰違規者
+        },
+        unlocksAction: 'punish',       // 解鎖懲罰行動
+        description: '禁忌、習俗、法律——社會秩序的基石',
+        flavorText: '懲罰背叛者，獎勵合作者，這就是文明的起點。'
+    },
+    teaching_system: {
+        id: 'teaching_system',
+        name: '教學系統',
+        path: 'social',
+        tier: 4,
+        cost: 8,
+        requires: ['oral_tradition'],
+        icon: '🎓',
+        effects: {
+            canCopyTech: true          // 可複製對手的技術卡效果
+        },
+        description: '有意識的知識傳遞，加速累積性文化演化',
+        flavorText: '教學讓每一代都能站在前人的肩膀上。'
+    },
+
+    // ===== 路徑 D：環境知識路線 =====
+    gathering_knowledge: {
+        id: 'gathering_knowledge',
+        name: '採集知識',
+        path: 'environment',
+        tier: 1,
+        cost: 2,
+        icon: '🌱',
+        effects: {
+            gutsBonus: 0.20            // 消化投資報酬 +20%
+        },
+        description: '認識可食用的植物、果實、根莖',
+        flavorText: '哪些蘑菇能吃？這個知識可能救你一命，或要你一命。'
+    },
+    folk_biology: {
+        id: 'folk_biology',
+        name: '民俗生物學',
+        path: 'environment',
+        tier: 2,
+        cost: 3,
+        requires: ['gathering_knowledge'],
+        icon: '🦋',
+        effects: {
+            eventPreview: true,        // 環境事件可查看
+            eventReroll: true          // 環境事件可重抽
+        },
+        unlocksAction: 'explore',      // 解鎖探索行動
+        description: '對動植物行為的系統性觀察與分類',
+        flavorText: '原住民的生態知識，往往比現代科學更早發現真相。'
+    },
+    environmental_adaptation: {
+        id: 'environmental_adaptation',
+        name: '環境適應',
+        path: 'environment',
+        tier: 3,
+        cost: 5,
+        requires: ['folk_biology'],
+        icon: '🏔️',
+        effects: {
+            negativeEventImmunity: true // 負面環境事件無效
+        },
+        description: '無論沙漠、雨林、極地，人類都能生存',
+        flavorText: '文化適應讓我們比任何物種都更具彈性。'
+    },
+    information_resources: {
+        id: 'information_resources',
+        name: '資訊資源',
+        path: 'environment',
+        tier: 4,
+        cost: 8,
+        requires: ['environmental_adaptation'],
+        icon: '📚',
+        effects: {
+            bonusAP: 2                 // 每回合額外 +2 AP
+        },
+        description: '系統化的知識管理，資訊本身成為資源',
+        flavorText: '從口耳相傳到文字記錄，知識的累積開始加速。'
+    }
+};
 
 // === 遊戲狀態 ===
 const game = {
@@ -96,11 +371,22 @@ function startGame() {
             name,
             energy: TOTAL_ENERGY,
             totalCards: 0,
-            techs: [],           // 已獲得的技術卡名稱列表
-            totalAP: 0,
-            currentAP: 0,        // 當前持有的 AP (可累積)
+            // === 技術系統 (新版) ===
+            unlockedTechs: [],   // 已解鎖的技術卡 ID 列表 (例如: ['fire_control', 'cooking'])
+            pathProgress: {      // 各路徑的解鎖進度
+                digestion: 0,    // 外部消化路線
+                tools: 0,        // 工具製作路線
+                social: 0,       // 社會學習路線
+                environment: 0   // 環境知識路線
+            },
+            // === AP 系統 ===
+            totalAP: 0,          // 歷史累計獲得的 AP (統計用)
+            currentAP: 0,        // 當前持有的 AP (可累積，用於升級或行動)
+            // === 戰鬥系統 ===
             defensePoints: 0,    // 當回合防禦點數 (不累積)
             pendingEnergy: 0,    // 暫存下回合的能量調整
+            allies: [],          // 結盟對象的索引列表
+            // === 回合資料 ===
             bids: { brain: 0, guts: 0, muscle: 0 },
             results: { cards: 0, energy: 0, ap: 0 },
             roundLog: { lost: 0, gained: 0 }
@@ -315,12 +601,8 @@ function confirmInvest() {
         reserved: reserved
     };
 
-    // 發放技術卡
-    if (player.results.cards > 0) {
-        drawTechCards(player, player.results.cards);
-    }
-
-    // 累積總分與 AP
+    // 累積文化成就分數（大腦投資的產出）
+    // 注意：技術卡現在透過 TechTreeManager 以 AP 解鎖，不再自動發放
     player.totalCards += player.results.cards;
     player.totalAP += player.results.ap;
     player.currentAP += player.results.ap; // 加入現有庫存
@@ -336,15 +618,417 @@ function confirmInvest() {
     }
 }
 
-function drawTechCards(player, count) {
-    for (let i = 0; i < count; i++) {
-        if (!player.techs.includes('農業發展')) {
-            player.techs.push('農業發展');
-        } else {
-            // 其他技術...
+// === 技術樹管理器 ===
+const TechTreeManager = {
+    // 取得指定路徑的下一個可升級技術
+    getNextTech(player, pathId) {
+        const path = TECH_PATHS[pathId];
+        if (!path) return null;
+
+        // 找到該路徑中第一個尚未解鎖的技術
+        for (const techId of path.techs) {
+            if (!player.unlockedTechs.includes(techId)) {
+                return TECH_CARDS[techId];
+            }
         }
+        return null; // 該路徑已全部解鎖
+    },
+
+    // 檢查玩家是否滿足升級前置條件
+    canUnlock(player, techId) {
+        const tech = TECH_CARDS[techId];
+        if (!tech) return false;
+
+        // 已經解鎖
+        if (player.unlockedTechs.includes(techId)) return false;
+
+        // AP 不足
+        if (player.currentAP < tech.cost) return false;
+
+        // 檢查前置技術
+        if (tech.requires) {
+            if (tech.requiresAny) {
+                // 任一前置即可
+                const hasAny = tech.requires.some(req => player.unlockedTechs.includes(req));
+                if (!hasAny) return false;
+            } else {
+                // 全部前置都要
+                const hasAll = tech.requires.every(req => player.unlockedTechs.includes(req));
+                if (!hasAll) return false;
+            }
+        }
+
+        return true;
+    },
+
+    // 執行技術升級
+    unlock(player, techId) {
+        if (!this.canUnlock(player, techId)) return false;
+
+        const tech = TECH_CARDS[techId];
+
+        // 扣除 AP
+        player.currentAP -= tech.cost;
+
+        // 加入已解鎖列表
+        player.unlockedTechs.push(techId);
+
+        // 更新路徑進度
+        if (tech.path && player.pathProgress[tech.path] !== undefined) {
+            player.pathProgress[tech.path]++;
+        }
+
+        // 套用技術效果
+        this.applyTechEffects(player, tech);
+
+        return true;
+    },
+
+    // 套用技術效果（立即生效的部分）
+    applyTechEffects(player, tech) {
+        // 效果的實際應用將在 Phase 3 完整實作
+        // 這裡先記錄解鎖的行動
+        console.log(`[TechTree] ${player.name} 解鎖了 ${tech.name}`);
+
+        if (tech.unlocksAction) {
+            console.log(`[TechTree] 解鎖行動: ${tech.unlocksAction}`);
+        }
+    },
+
+    // 取得玩家已解鎖的所有技術
+    getUnlockedTechs(player) {
+        return player.unlockedTechs.map(id => TECH_CARDS[id]).filter(Boolean);
+    },
+
+    // 取得玩家可解鎖的所有技術（滿足前置但尚未解鎖）
+    getAvailableTechs(player) {
+        const available = [];
+        for (const techId in TECH_CARDS) {
+            const tech = TECH_CARDS[techId];
+            if (!player.unlockedTechs.includes(techId)) {
+                // 檢查前置條件（不檢查 AP）
+                let prereqMet = true;
+                if (tech.requires) {
+                    if (tech.requiresAny) {
+                        prereqMet = tech.requires.some(req => player.unlockedTechs.includes(req));
+                    } else {
+                        prereqMet = tech.requires.every(req => player.unlockedTechs.includes(req));
+                    }
+                }
+                // Tier 1 技術沒有前置，自動滿足
+                if (prereqMet || tech.tier === 1) {
+                    available.push(tech);
+                }
+            }
+        }
+        return available;
+    },
+
+    // 檢查玩家是否擁有特定技術
+    hasTech(player, techId) {
+        return player.unlockedTechs.includes(techId);
+    },
+
+    // 檢查玩家是否解鎖了某行動
+    hasAction(player, actionName) {
+        for (const techId of player.unlockedTechs) {
+            const tech = TECH_CARDS[techId];
+            if (tech && tech.unlocksAction) {
+                if (Array.isArray(tech.unlocksAction)) {
+                    if (tech.unlocksAction.includes(actionName)) return true;
+                } else {
+                    if (tech.unlocksAction === actionName) return true;
+                }
+            }
+        }
+        return false;
     }
-}
+};
+
+// === 技術樹 UI 管理器 ===
+const TechTreeUI = {
+    currentTechId: null, // 目前彈窗顯示的技術
+
+    // 初始化頁籤切換
+    initTabs() {
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.dataset.tab;
+                // 切換按鈕狀態
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // 切換內容
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+            });
+        });
+    },
+
+    // 渲染技術樹面板
+    renderTechTree(player) {
+        const container = document.getElementById('tech-paths-container');
+        container.innerHTML = '';
+
+        for (const pathId in TECH_PATHS) {
+            const path = TECH_PATHS[pathId];
+            const pathEl = this.createPathElement(player, pathId, path);
+            container.appendChild(pathEl);
+        }
+    },
+
+    // 建立單條路徑元素
+    createPathElement(player, pathId, path) {
+        const pathEl = document.createElement('div');
+        pathEl.className = 'tech-path';
+        pathEl.dataset.path = pathId;
+
+        // 計算進度
+        const unlockedCount = path.techs.filter(techId =>
+            player.unlockedTechs.includes(techId)
+        ).length;
+        const totalCount = path.techs.length;
+
+        pathEl.innerHTML = `
+            <div class="tech-path-header">
+                <span class="tech-path-icon">${path.icon}</span>
+                <span class="tech-path-name">${path.name}</span>
+                <span class="tech-path-progress">${unlockedCount}/${totalCount}</span>
+            </div>
+            <div class="tech-nodes"></div>
+        `;
+
+        // 渲染技術節點
+        const nodesContainer = pathEl.querySelector('.tech-nodes');
+        path.techs.forEach(techId => {
+            const tech = TECH_CARDS[techId];
+            if (tech) {
+                const nodeEl = this.createTechNode(player, tech);
+                nodesContainer.appendChild(nodeEl);
+            }
+        });
+
+        return pathEl;
+    },
+
+    // 建立技術節點元素
+    createTechNode(player, tech) {
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'tech-node';
+        nodeEl.dataset.techId = tech.id;
+
+        // 判斷狀態
+        const isUnlocked = player.unlockedTechs.includes(tech.id);
+        const canUnlock = TechTreeManager.canUnlock(player, tech.id);
+        const prereqMet = this.checkPrerequisites(player, tech);
+
+        if (isUnlocked) {
+            nodeEl.classList.add('unlocked');
+        } else if (canUnlock) {
+            nodeEl.classList.add('available');
+        } else if (!prereqMet) {
+            nodeEl.classList.add('locked');
+        }
+
+        nodeEl.innerHTML = `
+            <div class="tech-node-icon">${tech.icon}</div>
+            <div class="tech-node-name">${tech.name}</div>
+            ${!isUnlocked ? `<div class="tech-node-cost">${tech.cost} AP</div>` : ''}
+        `;
+
+        // 點擊事件
+        nodeEl.addEventListener('click', () => {
+            this.showTechModal(player, tech);
+        });
+
+        return nodeEl;
+    },
+
+    // 檢查前置條件（不檢查 AP）
+    checkPrerequisites(player, tech) {
+        if (!tech.requires) return true;
+        if (tech.requiresAny) {
+            return tech.requires.some(req => player.unlockedTechs.includes(req));
+        }
+        return tech.requires.every(req => player.unlockedTechs.includes(req));
+    },
+
+    // 顯示技術卡彈窗
+    showTechModal(player, tech) {
+        this.currentTechId = tech.id;
+        const modal = document.getElementById('tech-modal');
+        const path = TECH_PATHS[tech.path];
+
+        // 填入資料
+        document.getElementById('modal-tech-icon').textContent = tech.icon;
+        document.getElementById('modal-tech-name').textContent = tech.name;
+        document.getElementById('modal-tech-path').textContent = path ? path.name : '';
+        document.getElementById('modal-tech-desc').textContent = tech.description;
+        document.getElementById('modal-tech-flavor').textContent = tech.flavorText;
+        document.getElementById('modal-tech-cost').textContent = `${tech.cost} AP`;
+
+        // 渲染效果列表
+        const effectsEl = document.getElementById('modal-tech-effects');
+        effectsEl.innerHTML = '<h4>效果</h4>';
+        for (const [key, value] of Object.entries(tech.effects)) {
+            const effectText = this.formatEffect(key, value);
+            effectsEl.innerHTML += `
+                <div class="tech-effect-item">
+                    <span class="effect-icon">✦</span>
+                    <span>${effectText}</span>
+                </div>
+            `;
+        }
+
+        // 渲染解鎖行動
+        if (tech.unlocksAction) {
+            const actions = Array.isArray(tech.unlocksAction) ? tech.unlocksAction : [tech.unlocksAction];
+            effectsEl.innerHTML += `
+                <div class="tech-effect-item">
+                    <span class="effect-icon">🔓</span>
+                    <span>解鎖行動: <span class="effect-value">${actions.join(', ')}</span></span>
+                </div>
+            `;
+        }
+
+        // 渲染前置需求
+        const reqEl = document.getElementById('modal-tech-requirements');
+        if (tech.requires && tech.requires.length > 0) {
+            const reqTexts = tech.requires.map(reqId => {
+                const reqTech = TECH_CARDS[reqId];
+                const hasTech = player.unlockedTechs.includes(reqId);
+                const className = hasTech ? 'req-met' : 'req-missing';
+                const icon = hasTech ? '✓' : '✗';
+                return `<span class="${className}">${icon} ${reqTech ? reqTech.name : reqId}</span>`;
+            });
+            const reqType = tech.requiresAny ? '(任一)' : '(全部)';
+            reqEl.innerHTML = `需要: ${reqTexts.join(' ')} ${reqType}`;
+        } else {
+            reqEl.innerHTML = '無前置需求';
+        }
+
+        // 更新按鈕狀態
+        const unlockBtn = document.getElementById('modal-unlock-btn');
+        const isUnlocked = player.unlockedTechs.includes(tech.id);
+        const canUnlock = TechTreeManager.canUnlock(player, tech.id);
+
+        if (isUnlocked) {
+            unlockBtn.textContent = '已解鎖';
+            unlockBtn.disabled = true;
+        } else if (canUnlock) {
+            unlockBtn.textContent = `解鎖 (${tech.cost} AP)`;
+            unlockBtn.disabled = false;
+        } else if (player.currentAP < tech.cost) {
+            unlockBtn.textContent = `AP 不足 (需要 ${tech.cost})`;
+            unlockBtn.disabled = true;
+        } else {
+            unlockBtn.textContent = '未滿足前置條件';
+            unlockBtn.disabled = true;
+        }
+
+        modal.classList.remove('hidden');
+    },
+
+    // 格式化效果文字
+    formatEffect(key, value) {
+        const effectMap = {
+            digestionReduction: `消化成本 -${Math.round(value * 100)}%`,
+            brainBonus: `大腦投資回報 +${Math.round(value * 100)}%`,
+            energyCapBonus: `能量上限 +${value}`,
+            unlimitedStorage: '可無限儲存能量',
+            passiveEnergy: `每回合 +${value} 能量`,
+            muscleReduction: `肌肉投資成本 -${Math.round(value * 100)}%`,
+            freeMuscleInvestment: `每回合免費 +${value} 肌肉投資`,
+            huntingBonus: `狩獵額外 +${value} 能量`,
+            investmentBonus: `所有投資回報 +${Math.round(value * 100)}%`,
+            canViewInvestment: `可查看 ${value} 位玩家的投資`,
+            canAlly: '可與其他玩家結盟',
+            techEffectBonus: `技術效果 +${Math.round(value * 100)}%`,
+            canPunish: '可懲罰違規者',
+            canCopyTech: '可複製對手技術效果',
+            gutsBonus: `消化投資回報 +${Math.round(value * 100)}%`,
+            eventPreview: '可預覽環境事件',
+            eventReroll: '可重抽環境事件',
+            negativeEventImmunity: '免疫負面環境事件',
+            bonusAP: `每回合額外 +${value} AP`
+        };
+        return effectMap[key] || `${key}: ${value}`;
+    },
+
+    // 關閉彈窗
+    closeModal() {
+        document.getElementById('tech-modal').classList.add('hidden');
+        this.currentTechId = null;
+    },
+
+    // 執行升級並更新 UI
+    performUpgrade(player) {
+        if (!this.currentTechId) return;
+
+        const tech = TECH_CARDS[this.currentTechId];
+        if (!tech) return;
+
+        // 執行升級
+        const success = TechTreeManager.unlock(player, this.currentTechId);
+        if (success) {
+            // 播放 AP 扣除動畫
+            const apDisplay = document.getElementById('current-ap');
+            apDisplay.classList.add('deducting');
+            setTimeout(() => apDisplay.classList.remove('deducting'), 300);
+
+            // 更新 AP 顯示
+            apDisplay.textContent = player.currentAP;
+
+            // 更新 tempState 的 AP (同步)
+            if (typeof tempState !== 'undefined') {
+                tempState.ap = player.currentAP;
+            }
+
+            // 重新渲染技術樹
+            this.renderTechTree(player);
+
+            // 標記剛解鎖的節點
+            const node = document.querySelector(`.tech-node[data-tech-id="${this.currentTechId}"]`);
+            if (node) {
+                node.classList.add('just-unlocked');
+                setTimeout(() => node.classList.remove('just-unlocked'), 500);
+            }
+
+            // 關閉彈窗
+            this.closeModal();
+
+            // 更新行動選項（如果解鎖了新行動）
+            updateActionUI();
+        }
+    },
+
+    // 初始化彈窗事件
+    initModalEvents() {
+        // 關閉按鈕
+        document.getElementById('modal-close-btn').addEventListener('click', () => {
+            this.closeModal();
+        });
+
+        // 點擊背景關閉
+        document.getElementById('tech-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'tech-modal') {
+                this.closeModal();
+            }
+        });
+
+        // 解鎖按鈕
+        document.getElementById('modal-unlock-btn').addEventListener('click', () => {
+            const player = game.players[game.currentIndex];
+            this.performUpgrade(player);
+        });
+    }
+};
+
+// 初始化技術樹 UI 事件
+TechTreeUI.initTabs();
+TechTreeUI.initModalEvents();
 
 // === 行動階段 (交易式設計) ===
 let tempState = {
@@ -388,26 +1072,37 @@ function initActionPhase(player) {
             <h3>農耕</h3>
             <p>消耗 1 AP</p>
             <p>獲得 2 能量</p>
-            <p class="desc-text">(需農業發展卡)</p>
+            <p class="desc-text">(需解鎖 [食物保存] 技術)</p>
         `;
         optionsDiv.insertBefore(btnFarm, document.getElementById('btn-defend'));
     }
 
     btnFarm.onclick = () => performAction('farm');
 
-    // 檢查解鎖狀態
-    if (player.techs.includes('農業發展')) {
+    // 檢查解鎖狀態（需要 food_preservation 技術）
+    if (TechTreeManager.hasAction(player, 'farming')) {
         btnFarm.classList.remove('locked');
         btnFarm.title = "";
     } else {
         btnFarm.classList.add('locked');
-        btnFarm.title = "需要獲得 [農業發展] 技術卡解鎖";
+        btnFarm.title = "需要解鎖 [食物保存] 技術";
         btnFarm.onclick = null;
         btnFarm.style.opacity = '0.5';
         btnFarm.style.cursor = 'not-allowed';
     }
 
     document.getElementById('reset-action-btn').onclick = () => resetTempState(player);
+
+    // 渲染技術樹
+    TechTreeUI.renderTechTree(player);
+
+    // 重置頁籤到行動頁
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === 'actions');
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === 'tab-actions');
+    });
 
     // 初始渲染
     updateActionUI();
@@ -489,7 +1184,7 @@ function updateActionUI() {
 
     if (btnFarm) {
         const player = game.players[game.currentIndex];
-        const isUnlocked = player.techs.includes('農業發展');
+        const isUnlocked = TechTreeManager.hasAction(player, 'farming');
         if (hasAP && isUnlocked) {
             btnFarm.classList.remove('disabled');
             btnFarm.disabled = false;
