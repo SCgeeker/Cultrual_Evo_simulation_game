@@ -66,6 +66,7 @@ const TECH_CARDS = {
         path: 'digestion',
         tier: 1,
         cost: 2,
+        ccsValue: 1,
         icon: '🔥',
         effects: {
             digestionReduction: 0.20,  // 消化成本 -20%
@@ -80,6 +81,7 @@ const TECH_CARDS = {
         path: 'digestion',
         tier: 2,
         cost: 3,
+        ccsValue: 2,
         requires: ['fire_control'],
         icon: '🍖',
         effects: {
@@ -95,6 +97,7 @@ const TECH_CARDS = {
         path: 'digestion',
         tier: 3,
         cost: 5,
+        ccsValue: 3,
         requires: ['cooking'],
         icon: '🧂',
         effects: {
@@ -111,6 +114,7 @@ const TECH_CARDS = {
         path: 'digestion', // 也屬於 tools 路徑的終點
         tier: 4,
         cost: 8,
+        ccsValue: 5,
         requires: ['food_preservation', 'complex_tools'], // 需要兩條路徑匯聚（任一即可）
         requiresAny: true, // 標記為「任一前置」而非「全部前置」
         icon: '🏛️',
@@ -129,6 +133,7 @@ const TECH_CARDS = {
         path: 'tools',
         tier: 1,
         cost: 2,
+        ccsValue: 1,
         icon: '🪨',
         effects: {
             freeMuscleInvestment: 1    // 每回合免費 +1 肌肉投資點
@@ -142,6 +147,7 @@ const TECH_CARDS = {
         path: 'tools',
         tier: 2,
         cost: 3,
+        ccsValue: 2,
         requires: ['stone_tools'],
         icon: '🏹',
         effects: {
@@ -157,6 +163,7 @@ const TECH_CARDS = {
         path: 'tools',
         tier: 3,
         cost: 5,
+        ccsValue: 3,
         requires: ['spear_hunting'],
         icon: '⚒️',
         effects: {
@@ -173,6 +180,7 @@ const TECH_CARDS = {
         path: 'social',
         tier: 1,
         cost: 2,
+        ccsValue: 1,
         icon: '💬',
         effects: {
             canViewInvestment: 1       // 可查看 1 位玩家的投資分配
@@ -186,6 +194,7 @@ const TECH_CARDS = {
         path: 'social',
         tier: 2,
         cost: 3,
+        ccsValue: 2,
         requires: ['language'],
         icon: '🏳️',
         effects: {
@@ -201,6 +210,7 @@ const TECH_CARDS = {
         path: 'social',
         tier: 3,
         cost: 5,
+        ccsValue: 3,
         requires: ['group_identity'],
         icon: '📖',
         effects: {
@@ -215,6 +225,7 @@ const TECH_CARDS = {
         path: 'social',
         tier: 3, // 與 oral_tradition 同層，但從 group_identity 分支
         cost: 5,
+        ccsValue: 3,
         requires: ['group_identity'],
         icon: '⚖️',
         effects: {
@@ -230,6 +241,7 @@ const TECH_CARDS = {
         path: 'social',
         tier: 4,
         cost: 8,
+        ccsValue: 5,
         requires: ['oral_tradition'],
         icon: '🎓',
         effects: {
@@ -246,6 +258,7 @@ const TECH_CARDS = {
         path: 'environment',
         tier: 1,
         cost: 2,
+        ccsValue: 1,
         icon: '🌱',
         effects: {
             gutsBonus: 0.20            // 消化投資報酬 +20%
@@ -259,6 +272,7 @@ const TECH_CARDS = {
         path: 'environment',
         tier: 2,
         cost: 3,
+        ccsValue: 2,
         requires: ['gathering_knowledge'],
         icon: '🦋',
         effects: {
@@ -275,6 +289,7 @@ const TECH_CARDS = {
         path: 'environment',
         tier: 3,
         cost: 5,
+        ccsValue: 3,
         requires: ['folk_biology'],
         icon: '🏔️',
         effects: {
@@ -289,6 +304,7 @@ const TECH_CARDS = {
         path: 'environment',
         tier: 4,
         cost: 8,
+        ccsValue: 5,
         requires: ['environmental_adaptation'],
         icon: '📚',
         effects: {
@@ -370,25 +386,26 @@ function startGame() {
         game.players.push({
             name,
             energy: TOTAL_ENERGY,
-            totalCards: 0,
+            ccs: 0,              // 文化複雜度分數 (Cultural Complexity Score)
             // === 技術系統 (新版) ===
-            unlockedTechs: [],   // 已解鎖的技術卡 ID 列表 (例如: ['fire_control', 'cooking'])
+            unlockedTechs: [],   // 已解鎖的技術卡 ID 列表
             pathProgress: {      // 各路徑的解鎖進度
-                digestion: 0,    // 外部消化路線
-                tools: 0,        // 工具製作路線
-                social: 0,       // 社會學習路線
-                environment: 0   // 環境知識路線
+                digestion: 0,
+                tools: 0,
+                social: 0,
+                environment: 0
             },
-            // === AP 系統 ===
+            // === 資源系統 ===
             totalAP: 0,          // 歷史累計獲得的 AP (統計用)
-            currentAP: 0,        // 當前持有的 AP (可累積，用於升級或行動)
+            currentAP: 0,        // 當前持有的 AP (智慧/技術點，用於升級)
+            actionPoints: 0,     // 當前持有的行動點 (肌肉點，用於執行行動)
             // === 戰鬥系統 ===
             defensePoints: 0,    // 當回合防禦點數 (不累積)
             pendingEnergy: 0,    // 暫存下回合的能量調整
             allies: [],          // 結盟對象的索引列表
             // === 回合資料 ===
             bids: { brain: 0, guts: 0, muscle: 0 },
-            results: { cards: 0, energy: 0, ap: 0 },
+            results: { ccs: 0, energy: 0, ap: 0, actions: 0 },
             roundLog: { lost: 0, gained: 0 }
         });
     }
@@ -595,23 +612,25 @@ function confirmInvest() {
     const energyGain = calcRewardWithMultiplier('guts', player.bids.guts);
 
     player.results = {
-        cards: calcRewardWithMultiplier('brain', player.bids.brain),
-        energy: energyGain,
-        ap: calcRewardWithMultiplier('muscle', player.bids.muscle), // 這是本回合"獲得"的
+        ap: calcRewardWithMultiplier('brain', player.bids.brain),    // 大腦 -> AP (用於累積技術)
+        energy: energyGain,                                          // 消化 -> 能量
+        actions: calcRewardWithMultiplier('muscle', player.bids.muscle), // 肌肉 -> 行動點 (用於本回合執行)
         reserved: reserved
     };
 
-    // 累積文化成就分數（大腦投資的產出）
-    // 注意：技術卡現在透過 TechTreeManager 以 AP 解鎖，不再自動發放
-    player.totalCards += player.results.cards;
+    // 資源發放
     player.totalAP += player.results.ap;
-    player.currentAP += player.results.ap; // 加入現有庫存
+    player.currentAP += player.results.ap;
+    player.actionPoints = player.results.actions; // 行動點不累積，本回合發放
+
+    // 重新計算 CCS (文化複雜度)
+    player.ccs = TechTreeManager.calculateCCS(player);
 
     // 修正：這裡只計算當前剩餘能量 + 收益，作為本回合"剩餘資產" (可被掠奪)。
-    // 下回合的 +10 基礎收入會在 startRound 統一發放。
     player.energy = reserved + energyGain;
 
-    if (player.currentAP > 0) {
+    // 進入行動/技術階段的條件：有智慧 AP (可用於技術) 或有行動點 (可用於行動)
+    if (player.currentAP > 0 || player.actionPoints > 0) {
         initActionPhase(player);
     } else {
         finalizeTurn(player);
@@ -634,38 +653,43 @@ const TechTreeManager = {
         return null; // 該路徑已全部解鎖
     },
 
-    // 檢查玩家是否滿足升級前置條件
+    // 檢查玩家是否滿足升級前置條件 (加上 AP 檢查)
     canUnlock(player, techId) {
+        if (!this.isAvailable(player, techId)) return false;
+
+        const tech = TECH_CARDS[techId];
+        // 如果在行動階段，優先檢查暫存 AP；否則檢查玩家點數
+        const availableAP = (typeof tempState !== 'undefined' && tempState.techAP !== undefined)
+            ? tempState.techAP
+            : player.currentAP;
+
+        return availableAP >= tech.cost;
+    },
+
+    // 檢查基礎可用性 (前置條件)
+    isAvailable(player, techId) {
         const tech = TECH_CARDS[techId];
         if (!tech) return false;
+        if (this.hasTech(player, techId)) return false;
 
-        // 已經解鎖
-        if (player.unlockedTechs.includes(techId)) return false;
-
-        // AP 不足
-        if (player.currentAP < tech.cost) return false;
-
-        // 檢查前置技術
         if (tech.requires) {
             if (tech.requiresAny) {
-                // 任一前置即可
-                const hasAny = tech.requires.some(req => player.unlockedTechs.includes(req));
-                if (!hasAny) return false;
+                return tech.requires.some(reqId => this.hasTech(player, reqId));
             } else {
-                // 全部前置都要
-                const hasAll = tech.requires.every(req => player.unlockedTechs.includes(req));
-                if (!hasAll) return false;
+                return tech.requires.every(reqId => this.hasTech(player, reqId));
             }
         }
-
         return true;
     },
 
     // 執行技術升級
     unlock(player, techId) {
-        if (!this.canUnlock(player, techId)) return false;
-
+        // commit 邏輯：直接檢查玩家物件或暫存狀態
         const tech = TECH_CARDS[techId];
+        if (!tech) return false;
+
+        // 這裡的 unlock 通常用於最終確認 commit
+        // 注意：在交易式設計中，此方法將在 end-action-btn 中被統一呼叫
 
         // 扣除 AP
         player.currentAP -= tech.cost;
@@ -680,6 +704,9 @@ const TechTreeManager = {
 
         // 套用技術效果
         this.applyTechEffects(player, tech);
+
+        // 更新 CCS 分數
+        player.ccs = this.calculateCCS(player);
 
         return true;
     },
@@ -726,22 +753,75 @@ const TechTreeManager = {
 
     // 檢查玩家是否擁有特定技術
     hasTech(player, techId) {
-        return player.unlockedTechs.includes(techId);
+        const permanent = player.unlockedTechs.includes(techId);
+        const pending = tempState.unlockedThisTurn && tempState.unlockedThisTurn.includes(techId);
+        return permanent || !!pending;
     },
 
-    // 檢查玩家是否解鎖了某行動
+    // 檢查還未解鎖了某行動
     hasAction(player, actionName) {
+        // 檢查永久解鎖
         for (const techId of player.unlockedTechs) {
-            const tech = TECH_CARDS[techId];
-            if (tech && tech.unlocksAction) {
-                if (Array.isArray(tech.unlocksAction)) {
-                    if (tech.unlocksAction.includes(actionName)) return true;
-                } else {
-                    if (tech.unlocksAction === actionName) return true;
-                }
+            if (this._techUnlocksAction(techId, actionName)) return true;
+        }
+        // 檢查本回合暫時解鎖
+        if (typeof tempState !== 'undefined' && tempState.unlockedThisTurn) {
+            for (const techId of tempState.unlockedThisTurn) {
+                if (this._techUnlocksAction(techId, actionName)) return true;
             }
         }
         return false;
+    },
+
+    _techUnlocksAction(techId, actionName) {
+        const tech = TECH_CARDS[techId];
+        if (tech && tech.unlocksAction) {
+            if (Array.isArray(tech.unlocksAction)) {
+                return tech.unlocksAction.includes(actionName);
+            }
+            return tech.unlocksAction === actionName;
+        }
+        return false;
+    },
+
+    // 計算文化複雜度分數 (CCS)
+    calculateCCS(player) {
+        let score = 0;
+        // 1. 基礎技術分
+        player.unlockedTechs.forEach(id => {
+            const tech = TECH_CARDS[id];
+            if (tech && tech.ccsValue) {
+                score += tech.ccsValue;
+            }
+        });
+        // 2. 組合加成
+        score += this.checkComboBonuses(player);
+        return score;
+    },
+
+    // 檢查組合加成
+    checkComboBonuses(player) {
+        let bonus = 0;
+        const techs = player.unlockedTechs;
+
+        // 火與食 (火的控制 + 烹飪技術 + 食物保存)
+        if (techs.includes('fire_control') && techs.includes('cooking') && techs.includes('food_preservation')) {
+            bonus += 5;
+        }
+        // 狩獵專精 (石器製作 + 長矛狩獵 + 複雜工具)
+        if (techs.includes('stone_tools') && techs.includes('spear_hunting') && techs.includes('complex_tools')) {
+            bonus += 5;
+        }
+        // 社會結構 (語言 + 族群認同 + 社會規範)
+        if (techs.includes('language') && techs.includes('group_identity') && techs.includes('social_norms')) {
+            bonus += 5;
+        }
+        // 知識體系 (民俗生物學 + 口語傳承 + 教學系統)
+        if (techs.includes('folk_biology') && techs.includes('oral_tradition') && techs.includes('teaching_system')) {
+            bonus += 7;
+        }
+
+        return bonus;
     }
 };
 
@@ -785,9 +865,9 @@ const TechTreeUI = {
         pathEl.className = 'tech-path';
         pathEl.dataset.path = pathId;
 
-        // 計算進度
+        // 計算進度 (包括暫時解鎖)
         const unlockedCount = path.techs.filter(techId =>
-            player.unlockedTechs.includes(techId)
+            TechTreeManager.hasTech(player, techId)
         ).length;
         const totalCount = path.techs.length;
 
@@ -820,12 +900,16 @@ const TechTreeUI = {
         nodeEl.dataset.techId = tech.id;
 
         // 判斷狀態
-        const isUnlocked = player.unlockedTechs.includes(tech.id);
+        const isUnlocked = TechTreeManager.hasTech(player, tech.id);
         const canUnlock = TechTreeManager.canUnlock(player, tech.id);
-        const prereqMet = this.checkPrerequisites(player, tech);
+        const prereqMet = TechTreeManager.isAvailable(player, tech.id) || isUnlocked;
 
         if (isUnlocked) {
             nodeEl.classList.add('unlocked');
+            // 如果是本回合剛點的，可以加個樣式區分 (選配)
+            if (tempState.unlockedThisTurn.includes(tech.id)) {
+                nodeEl.classList.add('pending-unlock');
+            }
         } else if (canUnlock) {
             nodeEl.classList.add('available');
         } else if (!prereqMet) {
@@ -848,11 +932,7 @@ const TechTreeUI = {
 
     // 檢查前置條件（不檢查 AP）
     checkPrerequisites(player, tech) {
-        if (!tech.requires) return true;
-        if (tech.requiresAny) {
-            return tech.requires.some(req => player.unlockedTechs.includes(req));
-        }
-        return tech.requires.every(req => player.unlockedTechs.includes(req));
+        return TechTreeManager.isAvailable(player, tech.id);
     },
 
     // 顯示技術卡彈窗
@@ -898,7 +978,7 @@ const TechTreeUI = {
         if (tech.requires && tech.requires.length > 0) {
             const reqTexts = tech.requires.map(reqId => {
                 const reqTech = TECH_CARDS[reqId];
-                const hasTech = player.unlockedTechs.includes(reqId);
+                const hasTech = TechTreeManager.hasTech(player, reqId);
                 const className = hasTech ? 'req-met' : 'req-missing';
                 const icon = hasTech ? '✓' : '✗';
                 return `<span class="${className}">${icon} ${reqTech ? reqTech.name : reqId}</span>`;
@@ -911,8 +991,11 @@ const TechTreeUI = {
 
         // 更新按鈕狀態
         const unlockBtn = document.getElementById('modal-unlock-btn');
-        const isUnlocked = player.unlockedTechs.includes(tech.id);
+        const isUnlocked = TechTreeManager.hasTech(player, tech.id);
         const canUnlock = TechTreeManager.canUnlock(player, tech.id);
+
+        // 使用暫存 AP
+        const availableAP = tempState.techAP;
 
         if (isUnlocked) {
             unlockBtn.textContent = '已解鎖';
@@ -920,7 +1003,7 @@ const TechTreeUI = {
         } else if (canUnlock) {
             unlockBtn.textContent = `解鎖 (${tech.cost} AP)`;
             unlockBtn.disabled = false;
-        } else if (player.currentAP < tech.cost) {
+        } else if (availableAP < tech.cost) {
             unlockBtn.textContent = `AP 不足 (需要 ${tech.cost})`;
             unlockBtn.disabled = true;
         } else {
@@ -963,27 +1046,28 @@ const TechTreeUI = {
         this.currentTechId = null;
     },
 
-    // 執行升級並更新 UI
+    // 執行暫時升級 (交易式)
     performUpgrade(player) {
         if (!this.currentTechId) return;
 
         const tech = TECH_CARDS[this.currentTechId];
         if (!tech) return;
 
-        // 執行升級
-        const success = TechTreeManager.unlock(player, this.currentTechId);
-        if (success) {
+        // 檢查條件 (暫存狀態)
+        const canUnlock = TechTreeManager.isAvailable(player, this.currentTechId);
+        const hasEnoughAP = tempState.techAP >= tech.cost;
+
+        if (canUnlock && hasEnoughAP) {
+            // 執行暫時扣除與解鎖
+            tempState.techAP -= tech.cost;
+            tempState.unlockedThisTurn.push(this.currentTechId);
+
             // 播放 AP 扣除動畫
             const apDisplay = document.getElementById('current-ap');
-            apDisplay.classList.add('deducting');
-            setTimeout(() => apDisplay.classList.remove('deducting'), 300);
-
-            // 更新 AP 顯示
-            apDisplay.textContent = player.currentAP;
-
-            // 更新 tempState 的 AP (同步)
-            if (typeof tempState !== 'undefined') {
-                tempState.ap = player.currentAP;
+            if (apDisplay) {
+                apDisplay.classList.add('deducting');
+                setTimeout(() => apDisplay.classList.remove('deducting'), 300);
+                apDisplay.textContent = tempState.techAP;
             }
 
             // 重新渲染技術樹
@@ -999,8 +1083,15 @@ const TechTreeUI = {
             // 關閉彈窗
             this.closeModal();
 
-            // 更新行動選項（如果解鎖了新行動）
+            // 更新行動 UI (有些技術可能解鎖新行動)
             updateActionUI();
+        } else {
+            // 提示失敗
+            const btn = document.getElementById('modal-unlock-btn');
+            if (btn) {
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 500);
+            }
         }
     },
 
@@ -1032,11 +1123,12 @@ TechTreeUI.initModalEvents();
 
 // === 行動階段 (交易式設計) ===
 let tempState = {
-    ap: 0,
+    ap: 0,              // 肌肉行動點 (本回合可用)
+    techAP: 0,          // 智慧點 (用於技術，暫存)
+    unlockedThisTurn: [], // 本回合暫時解鎖的技術 ID
     energyChange: 0,
     defenseToAdd: 0,
-    plunderTargets: [], // [{targetIndex, amount}]
-    // 新增：計數器，用於UI顯示
+    plunderTargets: [],
     counts: {
         hunt: 0,
         farm: 0,
@@ -1093,6 +1185,45 @@ function initActionPhase(player) {
 
     document.getElementById('reset-action-btn').onclick = () => resetTempState(player);
 
+    // 重新綁定確認按鈕，確保最新狀態
+    document.getElementById('end-action-btn').onclick = () => {
+        // 1. 寫入行動結果
+        player.actionPoints = tempState.ap; // 賸餘的行動點
+        player.energy += tempState.energyChange;
+        player.defensePoints += tempState.defenseToAdd;
+        player.roundLog.gained += tempState.energyChange;
+
+        // 2. 提交技術解鎖 (交易式 commit)
+        if (tempState.unlockedThisTurn.length > 0) {
+            tempState.unlockedThisTurn.forEach(techId => {
+                // 直接寫入玩家主體，因為此時已點擊確認
+                if (!player.unlockedTechs.includes(techId)) {
+                    player.unlockedTechs.push(techId);
+
+                    const tech = TECH_CARDS[techId];
+                    if (tech && tech.path && player.pathProgress[tech.path] !== undefined) {
+                        player.pathProgress[tech.path] = Math.max(player.pathProgress[tech.path], tech.tier);
+                    }
+                }
+            });
+            player.currentAP = tempState.techAP;
+        }
+
+        // 無論有無新解鎖，都重新計算 CCS 確保同步
+        player.ccs = TechTreeManager.calculateCCS(player);
+
+        // 3. 處理攻擊請求
+        tempState.plunderTargets.forEach(action => {
+            game.pendingAttacks.push({
+                attackerIndex: game.currentIndex,
+                targetIndex: action.targetIndex,
+                amount: 2
+            });
+        });
+
+        finalizeTurn(player);
+    };
+
     // 渲染技術樹
     TechTreeUI.renderTechTree(player);
 
@@ -1110,18 +1241,26 @@ function initActionPhase(player) {
 }
 
 function resetTempState(player) {
-    tempState = {
-        ap: player.currentAP, // 重置為實際擁有的 AP (含累積)
-        energyChange: 0,
-        defenseToAdd: 0,
-        plunderTargets: [],
-        counts: { hunt: 0, farm: 0, defend: 0 }
+    tempState.ap = player.actionPoints;
+    tempState.techAP = player.currentAP;
+    tempState.unlockedThisTurn = [];
+    tempState.energyChange = 0;
+    tempState.defenseToAdd = 0;
+    tempState.plunderTargets = [];
+    tempState.counts = {
+        hunt: 0,
+        farm: 0,
+        defend: 0
     };
     updateActionUI();
+    TechTreeUI.renderTechTree(player);
 }
 
 function updateActionUI() {
-    document.getElementById('current-ap').textContent = tempState.ap;
+    // 顯示兩類資源 (顯示暫存狀態)
+    const player = game.players[game.currentIndex];
+    document.getElementById('current-ap').textContent = tempState.techAP; // 暫存智慧 AP (可取消)
+    document.getElementById('current-action-points').textContent = tempState.ap; // 暫存肌肉行動點 (可重置)
 
     // 定義 helper 函數來更新 Badge
     const updateBadge = (btnId, count) => {
@@ -1176,24 +1315,30 @@ function updateActionUI() {
     const groupPlunder = document.getElementById('group-plunder');
 
     const hasAP = tempState.ap > 0;
+    const canDefend = TechTreeManager.hasAction(player, 'defend');
+    const canPlunder = TechTreeManager.hasAction(player, 'plunder');
 
-    [btnHunt, btnDefend, groupPlunder].forEach(btn => {
-        if (hasAP) btn.classList.remove('disabled');
-        else btn.classList.add('disabled');
-    });
+    // 1. 基礎行動 (狩獵)
+    if (hasAP) btnHunt.classList.remove('disabled');
+    else btnHunt.classList.add('disabled');
+
+    // 2. 防禦 (需解鎖)
+    const defLocked = !canDefend;
+    btnDefend.classList.toggle('locked', defLocked);
+    btnDefend.title = defLocked ? "需解鎖 [族群認同] 技術" : "";
+    btnDefend.classList.toggle('disabled', !hasAP || defLocked);
+
+    // 3. 掠奪 (需解鎖)
+    const pluLocked = !canPlunder;
+    groupPlunder.classList.toggle('locked', pluLocked);
+    groupPlunder.title = pluLocked ? "需解鎖 [族群認同] 技術" : "";
+    groupPlunder.classList.toggle('disabled', !hasAP || pluLocked);
 
     if (btnFarm) {
-        const player = game.players[game.currentIndex];
-        const isUnlocked = TechTreeManager.hasAction(player, 'farming');
-        if (hasAP && isUnlocked) {
-            btnFarm.classList.remove('disabled');
-            btnFarm.disabled = false;
-        } else {
-            btnFarm.classList.add('disabled');
-            if (!isUnlocked) {
-                btnFarm.style.opacity = '0.5';
-            }
-        }
+        const isFarmLocked = !TechTreeManager.hasAction(player, 'farming');
+        btnFarm.classList.toggle('locked', isFarmLocked);
+        btnFarm.title = isFarmLocked ? "需解鎖 [食物保存] 技術" : "";
+        btnFarm.classList.toggle('disabled', !hasAP || isFarmLocked);
     }
 
     // 渲染掠奪目標
@@ -1263,39 +1408,16 @@ function performAction(type, targetIndex) {
     updateActionUI();
 }
 
-document.getElementById('end-action-btn').addEventListener('click', () => {
-    const player = game.players[game.currentIndex];
 
-    // 1. 寫入行動結果
-    player.currentAP = tempState.ap;
-    player.energy += tempState.energyChange; // 獵/農的獲得，計入本人即時/下回合資金
-    player.defensePoints += tempState.defenseToAdd;
 
-    // 紀錄自己的收益 (農/獵，不含掠奪)
-    player.roundLog.gained += tempState.energyChange;
-
-    // 2. 處理攻擊請求
-    // 修正：將所有掠奪請求推入全域佇列，留待回合結束統一解決
-    tempState.plunderTargets.forEach(action => {
-        game.pendingAttacks.push({
-            attackerIndex: game.currentIndex,
-            targetIndex: action.targetIndex,
-            amount: 2
-        });
-    });
-
-    finalizeTurn(player);
-});
-
-document.getElementById('info-confirm-btn').addEventListener('click', () => {
+// 說明畫面確認
+document.getElementById('info-confirm-btn').onclick = () => {
     const player = game.players[game.currentIndex];
     finalizeTurn(player);
-});
+};
 
 function finalizeTurn(player) {
-    player.totalCards += player.results.cards;
-    player.totalAP += (player.bids.muscle * game.multipliers.muscle);
-
+    // 分數已在 confirmInvest 及 TechTreeManager.unlock 中即時計算
     showPersonalResult(player);
 }
 
@@ -1305,10 +1427,12 @@ function showPersonalResult(player) {
     document.getElementById('personal-brain').textContent = player.bids.brain;
     document.getElementById('personal-guts').textContent = player.bids.guts;
     document.getElementById('personal-muscle').textContent = player.bids.muscle;
-    document.getElementById('personal-cards').textContent = player.results.cards;
+    document.getElementById('personal-cards').textContent = player.ccs; // 顯示 CCS 而非 Cards
     document.getElementById('personal-energy').textContent = (player.results.energy >= 0 ? '+' : '') + player.results.energy;
     document.getElementById('personal-ap').textContent = player.results.ap;
-    document.getElementById('personal-reserved').textContent = player.results.reserved;
+    document.getElementById('personal-actions').textContent = player.results.actions; // 改為顯示獲得的行動點
+    const reservedEl = document.getElementById('personal-reserved');
+    if (reservedEl) reservedEl.textContent = player.results.reserved;
 
     // 下回合可用 = 當前剩餘 + 10 + 待處理調整 (被掠奪)
     // 這裡顯示的尚未包含本回合之後可能發生的掠奪成功收益 (因為還沒結算)
@@ -1373,6 +1497,9 @@ function showResult() {
 
     const tbody = document.getElementById('result-body');
     tbody.innerHTML = '';
+
+    let rubiconWinner = null;
+
     game.players.forEach(p => {
         const row = document.createElement('tr');
         // 修正：總可用能量 (預測下回合起始)
@@ -1391,13 +1518,26 @@ function showResult() {
             <td>${p.bids.brain}${winners.brain === p.name ? ' ★' : ''}</td>
             <td>${p.bids.guts}${winners.guts === p.name ? ' ★' : ''}</td>
             <td>${p.bids.muscle}${winners.muscle === p.name ? ' ★' : ''}</td>
-            <td>${p.results.cards} <span style="font-size:0.8em; color:#888">(${p.totalCards})</span></td>
+            <td><strong style="color:#e91e63">${p.ccs}</strong> <span style="font-size:0.8em; color:#888">(${p.unlockedTechs.length}項)</span></td>
             <td>${actionStr}</td>
             <td>${p.results.reserved}</td>
             <td>${nextTotal}</td>
         `;
         tbody.appendChild(row);
+
+        // 檢查盧比孔門檻 (30 CCS)
+        if (p.ccs >= 30) {
+            rubiconWinner = p;
+        }
     });
+
+    if (rubiconWinner) {
+        setTimeout(() => {
+            alert(`${rubiconWinner.name} 已達成盧比孔門檻 (30 CCS)，完成文化演化突破！`);
+            showGameOver();
+        }, 500);
+        return;
+    }
 
     showScreen('result');
 }
@@ -1423,15 +1563,14 @@ document.getElementById('next-round-btn').addEventListener('click', () => {
 
 function showGameOver() {
     const ranked = [...game.players].sort((a, b) => {
-        if (b.totalCards !== a.totalCards) return b.totalCards - a.totalCards;
-        if (b.energy !== a.energy) return b.energy - a.energy;
-        return b.totalAP - a.totalAP;
+        if (b.ccs !== a.ccs) return b.ccs - a.ccs;
+        return b.energy - a.energy;
     });
 
     const winner = ranked[0];
 
     document.getElementById('winner-name').textContent = winner.name;
-    document.getElementById('winner-score').textContent = winner.totalCards;
+    document.getElementById('winner-score').textContent = winner.ccs;
 
     const tbody = document.getElementById('final-rank-body');
     tbody.innerHTML = '';
@@ -1440,9 +1579,9 @@ function showGameOver() {
         row.innerHTML = `
             <td>${index + 1}</td>
             <td>${p.name}${index === 0 ? ' 🏆' : ''}</td>
-            <td>${p.totalCards}</td>
+            <td>${p.ccs}</td>
             <td>${p.energy}</td>
-            <td>${p.totalAP}</td>
+            <td>${p.unlockedTechs.length}</td>
         `;
         tbody.appendChild(row);
     });

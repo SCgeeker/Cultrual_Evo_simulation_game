@@ -73,14 +73,20 @@
                     <span>保留: <strong id="reserved-energy">10</strong></span>
                 </div>
 
+                <!-- 作用中的技術效果 -->
+                <div id="active-bonuses" class="active-bonuses hidden">
+                    <h3>已啟用的技術效果:</h3>
+                    <ul id="active-bonuses-list"></ul>
+                </div>
+
                 <div class="investment-area" data-type="brain">
                     <h2>發展大腦 <span class="multiplier-badge hidden" id="mult-brain">×1.5</span></h2>
-                    <p class="cost-hint">每 2 能量 = 1 張技術卡 (未滿 2 無效)</p>
+                    <p class="cost-hint">每 2 能量 = 1 技術點 AP (累積智慧)</p>
                     <div class="slider-row">
                         <input type="range" id="slider-brain" min="0" max="10" value="0">
                         <span class="slider-value" id="value-brain">0</span>
                     </div>
-                    <p class="reward-preview">→ 預估抽卡: <strong id="reward-brain">0</strong> 張</p>
+                    <p class="reward-preview">→ 預估 AP: <strong id="reward-brain">0</strong></p>
                 </div>
 
                 <div class="investment-area" data-type="guts">
@@ -95,12 +101,12 @@
 
                 <div class="investment-area" data-type="muscle">
                     <h2>強化肌肉 <span class="multiplier-badge hidden" id="mult-muscle">×1.5</span></h2>
-                    <p class="cost-hint">每 2 能量 = 1 行動點 (未滿 2 無效)</p>
+                    <p class="cost-hint">每 2 能量 = 1 行動點 (短期優勢)</p>
                     <div class="slider-row">
                         <input type="range" id="slider-muscle" min="0" max="10" value="0">
                         <span class="slider-value" id="value-muscle">0</span>
                     </div>
-                    <p class="reward-preview">→ 預估行動: <strong id="reward-muscle">0</strong> 點</p>
+                    <p class="reward-preview">→ 預估行動: <strong id="reward-muscle">0</strong></p>
                     <p class="total-forecast">下回合總能量預估: <strong id="forecast-total">10</strong></p>
                 </div>
 
@@ -115,7 +121,10 @@
                     <h2 id="action-player-name">部落 1</h2>
 
                     <div class="ap-display">
-                        可用行動點: <strong id="current-ap">0</strong>
+                        <div class="ap-item">智慧點 (AP): <strong id="current-ap">0</strong> <span
+                                class="hint">(用於技術樹)</span></div>
+                        <div class="ap-item">行動點: <strong id="current-action-points">0</strong> <span
+                                class="hint">(用於此階段)</span></div>
                     </div>
 
                     <!-- 頁籤切換 -->
@@ -127,29 +136,29 @@
                     <!-- 行動選項頁籤 -->
                     <div class="tab-content active" id="tab-actions">
                         <div class="action-options">
-                        <div class="action-card" id="btn-hunt">
-                            <div class="icon">🏹</div>
-                            <h3>狩獵</h3>
-                            <p>消耗 1 AP</p>
-                            <p class="effect">獲得 +1 能量</p>
-                        </div>
-
-                        <div class="action-card" id="btn-defend">
-                            <div class="icon">🛡️</div>
-                            <h3>防禦</h3>
-                            <p>消耗 1 AP</p>
-                            <p class="effect">抵消 1 次掠奪</p>
-                        </div>
-
-                        <div class="action-card disabled" id="group-plunder">
-                            <div class="icon">⚔️</div>
-                            <h3>掠奪</h3>
-                            <p>消耗 1 AP</p>
-                            <p class="effect">搶奪對手 2 能量</p>
-                            <div id="plunder-targets" class="target-list">
-                                <!-- 動態生成對手按鈕 -->
+                            <div class="action-card" id="btn-hunt">
+                                <div class="icon">🏹</div>
+                                <h3>狩獵</h3>
+                                <p>消耗 1 AP</p>
+                                <p class="effect">獲得 +1 能量</p>
                             </div>
-                        </div>
+
+                            <div class="action-card" id="btn-defend">
+                                <div class="icon">🛡️</div>
+                                <h3>防禦</h3>
+                                <p>消耗 1 AP</p>
+                                <p class="effect">抵消 1 次掠奪</p>
+                            </div>
+
+                            <div class="action-card disabled" id="group-plunder">
+                                <div class="icon">⚔️</div>
+                                <h3>掠奪</h3>
+                                <p>消耗 1 AP</p>
+                                <p class="effect">搶奪對手 2 能量</p>
+                                <div id="plunder-targets" class="target-list">
+                                    <!-- 動態生成對手按鈕 -->
+                                </div>
+                            </div>
                         </div>
                     </div><!-- 結束 tab-actions -->
 
@@ -206,8 +215,9 @@
                     <p class="desc-text">
                         您獲得了 <strong id="info-ap">0</strong> 點行動點。<br><br>
                         在多人模式中，您可以消耗行動點來：<br>
-                        1. <strong>狩獵</strong>：從環境獲得額外能量。<br>
-                        2. <strong>掠奪</strong>：搶奪其他玩家的能量。
+                        1. <strong>狩獵/農耕</strong>：獲得額外能量。<br>
+                        2. <strong>掠奪</strong>：搶奪其他玩家的能量。<br>
+                        3. <strong>防禦</strong>：保護自己免受搶奪。
                     </p>
                     <button id="info-confirm-btn" class="btn-primary">了解</button>
                 </div>
@@ -219,13 +229,16 @@
                     <h2 id="personal-player-name">部落 1</h2>
                     <p class="subtitle">投資結果</p>
                     <ul class="personal-result-list">
-                        <li>發展大腦: <strong id="personal-brain">0</strong> → 技術卡 <strong id="personal-cards">0</strong> 張
-                        </li>
-                        <li>維護消化: <strong id="personal-guts">0</strong> → 能量 <strong id="personal-energy">+0</strong>
-                        </li>
-                        <li>強化肌肉: <strong id="personal-muscle">0</strong> → 行動點 <strong id="personal-ap">0</strong></li>
-                        <li>保留能量: <strong id="personal-reserved">0</strong></li>
-                        <li>下回合可用: <strong id="personal-next-total">0</strong></li>
+                        <li>發展大腦 (AP): <strong id="personal-brain">0</strong> → 獲得 <strong id="personal-ap">0</strong>
+                            智慧點</li>
+                        <li>維護消化 (能量): <strong id="personal-guts">0</strong> → 產出 <strong
+                                id="personal-energy">+0</strong> 能量</li>
+                        <li>強化肌肉 (行動): <strong id="personal-muscle">0</strong> → 獲得 <strong
+                                id="personal-actions">0</strong> 行動點</li>
+                        <li>當前文化複雜度 (CCS): <strong id="personal-cards">0</strong></li>
+                        <li>本回合保留能量: <strong id="personal-reserved">0</strong></li>
+                        <li class="potential-item">下一階段潛在行動收益: <strong id="personal-potentials">+0</strong> 能量</li>
+                        <li class="final-energy-item">下回合起始能量 (預期): <strong id="personal-final-next">0</strong></li>
                     </ul>
                     <button id="next-player-btn" class="btn-primary">交給下一位</button>
                 </div>
@@ -239,13 +252,13 @@
                         <thead>
                             <tr>
                                 <th>部落</th>
-                                <th>大腦</th>
-                                <th>消化</th>
-                                <th>肌肉</th>
-                                <th>卡牌</th>
-                                <th>收益</th>
-                                <th>保留</th>
-                                <th>總可用</th>
+                                <th>大腦 (AP)</th>
+                                <th>消化 (⚡)</th>
+                                <th>肌肉 (⚔️)</th>
+                                <th>文化 (CCS)</th>
+                                <th>收益 (⚡)</th>
+                                <th>保留 (⚡)</th>
+                                <th>下回合 (⚡)</th>
                             </tr>
                         </thead>
                         <tbody id="result-body"></tbody>
@@ -260,7 +273,7 @@
                     <div class="trophy">🏆</div>
                     <p class="subtitle">文化演化最終王者</p>
                     <h2 id="winner-name">部落 1</h2>
-                    <p class="winner-stat">累積技術卡: <strong id="winner-score">0</strong> 張</p>
+                    <p class="winner-stat">文化複雜度 (CCS): <strong id="winner-score">0</strong></p>
 
                     <div class="result-table-wrapper">
                         <table id="final-rank-table">
@@ -268,9 +281,9 @@
                                 <tr>
                                     <th>排名</th>
                                     <th>部落</th>
-                                    <th>技術卡 (分數)</th>
-                                    <th>總能量</th>
-                                    <th>行動點</th>
+                                    <th>文化度 (CCS)</th>
+                                    <th>當前能量</th>
+                                    <th>總技術數</th>
                                 </tr>
                             </thead>
                             <tbody id="final-rank-body"></tbody>
