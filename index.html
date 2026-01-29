@@ -29,13 +29,22 @@
                     </select>
                 </div>
                 <div class="setup-form">
-                    <label>遊戲長度 (回合)</label>
-                    <select id="max-rounds">
-                        <option value="10">10 回合 (快速)</option>
-                        <option value="20" selected>20 回合 (標準)</option>
-                        <option value="30">30 回合 (長局)</option>
-                        <option value="5">5 回合 (測試)</option>
-                    </select>
+                    <label>最大回合數</label>
+                    <input type="number" id="max-rounds" value="20">
+                </div>
+                <div class="setup-form">
+                    <label>勝利目標 (CCS)</label>
+                    <input type="number" id="target-ccs" value="30" placeholder="預設 30">
+                </div>
+                <div class="setup-form">
+                    <label>每回合基礎能量</label>
+                    <input type="number" id="base-energy" value="10" min="1" max="20">
+                </div>
+                <div class="setup-form">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="require-guts" style="width: auto;">
+                        強制消化投資 (最少 3 點才能存活)
+                    </label>
                 </div>
                 <div id="player-names"></div>
                 <button id="start-btn" class="btn-primary">開始遊戲</button>
@@ -91,7 +100,7 @@
 
                 <div class="investment-area" data-type="guts">
                     <h2>維護消化 <span class="multiplier-badge hidden" id="mult-guts">×1.5</span></h2>
-                    <p class="cost-hint">每 3 能量 = +2 下回合能量 (未滿 3 無效)</p>
+                    <p class="cost-hint">每 3 能量 = +2 下回合能量</p>
                     <div class="slider-row">
                         <input type="range" id="slider-guts" min="0" max="10" value="0">
                         <span class="slider-value" id="value-guts">0</span>

@@ -1,11 +1,13 @@
-// === 常數 ===
-const TOTAL_ENERGY = 10;
+// === 預設值 ===
+let BASE_ENERGY = 10; // 可由設定畫面覆寫
 const COSTS = { brain: 2, guts: 3, muscle: 2 };
 
 // === 事件資料 ===
 const EVENTS = [
     { id: 'dry_season', name: '乾季來臨', icon: '🌵', desc: '消化回報 ×1.5', effect: { guts: 1.5 } },
-    { id: 'migration', name: '大型獵物遷徙', icon: '🦌', desc: '肌肉回報 ×1.5', effect: { muscle: 1.5 } },
+    { id: 'ice_age', name: '冰河時期', icon: '❄️', desc: '全效益 ×0.5', effect: { brain: 0.5, guts: 0.5, muscle: 0.5 } },
+    { id: 'pestilence', name: '瘟疫蔓延', icon: '🤢', desc: '肌肉/消化效益 ×0.5', effect: { guts: 0.5, muscle: 0.5 } },
+    { id: 'hunt', name: '獵物豐富', icon: '🦌', desc: '肌肉回報 ×1.5', effect: { muscle: 1.5 } },
     { id: 'terrain', name: '複雜地形', icon: '⛰️', desc: '大腦回報 ×1.5', effect: { brain: 1.5 } },
     { id: 'abundance', name: '食物豐足', icon: '🍎', desc: '所有玩家 +3 能量', effect: { energyBonus: 3 } },
     { id: 'scarcity', name: '資源匱乏', icon: '💀', desc: '所有玩家 -2 能量', effect: { energyBonus: -2 } },
@@ -41,7 +43,7 @@ const TECH_PATHS = {
         name: '社會學習路線',
         icon: '🗣️',
         description: '發展語言與社會組織，解鎖合作與競爭行動',
-        techs: ['language', 'group_identity', 'oral_tradition', 'teaching_system'],
+        techs: ['language', 'group_identity', 'oral_tradition', 'teaching_system', 'cumulative_culture'],
         branches: {
             // 從 group_identity 分支出的額外路徑
             norms: { after: 'group_identity', techs: ['social_norms'] }
@@ -53,7 +55,7 @@ const TECH_PATHS = {
         name: '環境知識路線',
         icon: '🌿',
         description: '累積環境知識，提升採集效率與適應能力',
-        techs: ['gathering_knowledge', 'folk_biology', 'environmental_adaptation', 'information_resources']
+        techs: ['gathering_knowledge', 'folk_biology', 'environmental_adaptation', 'information_resources', 'cumulative_culture']
     }
 };
 
@@ -65,12 +67,15 @@ const TECH_CARDS = {
         name: '火的控制',
         path: 'digestion',
         tier: 1,
-        cost: 2,
+        cost: 3,
         ccsValue: 1,
         icon: '🔥',
         effects: {
             digestionReduction: 0.20,  // 消化成本 -20%
             brainBonus: 0.10           // 大腦投資回報 +10%
+        },
+        eventModifiers: {
+            'ice_age': { brain: 2.0, guts: 2.0, muscle: 2.0 } // 抵消冰河時期懲罰
         },
         description: '掌握火焰，開啟人類演化的關鍵一步',
         flavorText: '火讓我們能在夜間活動，驅趕掠食者，更重要的是——烹飪食物。'
@@ -80,7 +85,7 @@ const TECH_CARDS = {
         name: '烹飪技術',
         path: 'digestion',
         tier: 2,
-        cost: 3,
+        cost: 5,
         ccsValue: 2,
         requires: ['fire_control'],
         icon: '🍖',
@@ -96,7 +101,7 @@ const TECH_CARDS = {
         name: '食物保存',
         path: 'digestion',
         tier: 3,
-        cost: 5,
+        cost: 8,
         ccsValue: 3,
         requires: ['cooking'],
         icon: '🧂',
@@ -113,14 +118,14 @@ const TECH_CARDS = {
         name: '人造物系統',
         path: 'digestion', // 也屬於 tools 路徑的終點
         tier: 4,
-        cost: 8,
+        cost: 12,
         ccsValue: 5,
-        requires: ['food_preservation', 'complex_tools'], // 需要兩條路徑匯聚（任一即可）
-        requiresAny: true, // 標記為「任一前置」而非「全部前置」
+        requires: ['food_preservation', 'complex_tools'], // 需要兩條路徑匯聚（全部）
+        // requiresAny 移除，預設為 requiresAll
         icon: '🏛️',
         effects: {
-            passiveEnergy: 5,          // 每回合 +5 能量
-            muscleReduction: 0.50      // 肌肉投資成本減半
+            passiveEnergy: 3,          // 每回合 +3 能量 (調整)
+            muscleReduction: 1.0       // 肌肉投資成本 -1 (調整)
         },
         description: '建築、器具、機械——人造環境取代自然選擇',
         flavorText: '我們不再適應環境，而是讓環境適應我們。'
@@ -132,7 +137,7 @@ const TECH_CARDS = {
         name: '石器製作',
         path: 'tools',
         tier: 1,
-        cost: 2,
+        cost: 3,
         ccsValue: 1,
         icon: '🪨',
         effects: {
@@ -146,7 +151,7 @@ const TECH_CARDS = {
         name: '長矛狩獵',
         path: 'tools',
         tier: 2,
-        cost: 3,
+        cost: 5,
         ccsValue: 2,
         requires: ['stone_tools'],
         icon: '🏹',
@@ -162,7 +167,7 @@ const TECH_CARDS = {
         name: '複雜工具',
         path: 'tools',
         tier: 3,
-        cost: 5,
+        cost: 8,
         ccsValue: 3,
         requires: ['spear_hunting'],
         icon: '⚒️',
@@ -240,7 +245,7 @@ const TECH_CARDS = {
         name: '教學系統',
         path: 'social',
         tier: 4,
-        cost: 8,
+        cost: 12,
         ccsValue: 5,
         requires: ['oral_tradition'],
         icon: '🎓',
@@ -279,6 +284,9 @@ const TECH_CARDS = {
             eventPreview: true,        // 環境事件可查看
             eventReroll: true          // 環境事件可重抽
         },
+        eventModifiers: {
+            'pestilence': { guts: 2.0, muscle: 2.0 } // 抵消瘟疫懲罰
+        },
         unlocksAction: 'explore',      // 解鎖探索行動
         description: '對動植物行為的系統性觀察與分類',
         flavorText: '原住民的生態知識，往往比現代科學更早發現真相。'
@@ -303,7 +311,7 @@ const TECH_CARDS = {
         name: '資訊資源',
         path: 'environment',
         tier: 4,
-        cost: 8,
+        cost: 12,
         ccsValue: 5,
         requires: ['environmental_adaptation'],
         icon: '📚',
@@ -312,6 +320,22 @@ const TECH_CARDS = {
         },
         description: '系統化的知識管理，資訊本身成為資源',
         flavorText: '從口耳相傳到文字記錄，知識的累積開始加速。'
+    },
+    // ===== Tier 5 終極技術 =====
+    cumulative_culture: {
+        id: 'cumulative_culture',
+        name: '累積文化',
+        path: 'social', // 同時出現在 social 和 environment
+        tier: 5,
+        cost: 15,
+        ccsValue: 10,
+        requiresTier4Count: 2, // 需任兩個 T4 技術
+        icon: '🚀',
+        effects: {
+            ccsPerTech: true           // 特殊效果：每個已解鎖技術 +1 CCS
+        },
+        description: '文化的棘輪效應，知識的指數級成長',
+        flavorText: '從此刻起，我們不再是適應這顆星球，而是開始邁向星辰。'
     }
 };
 
@@ -323,7 +347,7 @@ const game = {
     maxRounds: 20,
     currentEvent: null,
     pendingAttacks: [], // 新增：暫存本回合所有攻擊，於結算時統一處理
-    multipliers: { brain: 1, guts: 1, muscle: 1 }
+    baseMultipliers: { brain: 1, guts: 1, muscle: 1 }
 };
 
 // === DOM 元素 ===
@@ -378,6 +402,9 @@ function initSetup() {
 function startGame() {
     const count = parseInt(document.getElementById('player-count').value);
     game.maxRounds = parseInt(document.getElementById('max-rounds').value) || 20;
+    game.targetCCS = parseInt(document.getElementById('target-ccs').value) || 30;
+    BASE_ENERGY = parseInt(document.getElementById('base-energy').value) || 10;
+    game.requireGuts = !!document.getElementById('require-guts').checked;
     game.players = [];
     game.pendingAttacks = []; // 清空攻擊佇列
 
@@ -385,7 +412,7 @@ function startGame() {
         const name = document.getElementById(`name-${i}`).value || `部落 ${i + 1}`;
         game.players.push({
             name,
-            energy: TOTAL_ENERGY,
+            energy: BASE_ENERGY,
             ccs: 0,              // 文化複雜度分數 (Cultural Complexity Score)
             // === 技術系統 (新版) ===
             unlockedTechs: [],   // 已解鎖的技術卡 ID 列表
@@ -426,6 +453,9 @@ function startRound() {
     game.players.forEach(p => {
         // 重置防禦點
         p.defensePoints = 0;
+        // 重置肌肉行動點 (本回合未使用則失效) - 根據使用者需求新增
+        p.actionPoints = 0;
+
         // 重置回合紀錄
         p.roundLog = { lost: 0, gained: 0 };
 
@@ -437,21 +467,21 @@ function startRound() {
 
         // 發放基礎能量 (回合開始時發放)
         if (game.round > 1) {
-            p.energy += TOTAL_ENERGY;
+            p.energy += BASE_ENERGY;
         }
     });
 
     // 抽取隨機事件
     game.currentEvent = EVENTS[Math.floor(Math.random() * EVENTS.length)];
 
-    // 重設乘數
-    game.multipliers = { brain: 1, guts: 1, muscle: 1 };
+    // 重設基礎乘數
+    game.baseMultipliers = { brain: 1, guts: 1, muscle: 1 };
 
-    // 套用事件效果到乘數
+    // 套用事件效果到基礎乘數
     const eff = game.currentEvent.effect;
-    if (eff.brain) game.multipliers.brain = eff.brain;
-    if (eff.guts) game.multipliers.guts = eff.guts;
-    if (eff.muscle) game.multipliers.muscle = eff.muscle;
+    if (eff.brain) game.baseMultipliers.brain = eff.brain;
+    if (eff.guts) game.baseMultipliers.guts = eff.guts;
+    if (eff.muscle) game.baseMultipliers.muscle = eff.muscle;
 
     // 修正：能量事件直接影響當前可用能量 (Allocation)
     if (eff.energyBonus) {
@@ -511,19 +541,72 @@ function showInvest() {
     sliders.muscle.value = 0;
 
     // 更新乘數顯示
-    updateMultiplierBadges();
+    updateMultiplierBadges(player);
     updateInvestUI();
+
+    // 顯示已生效的技術效果
+    const activeBonusesList = document.getElementById('active-bonuses-list');
+    const activeBonusesDiv = document.getElementById('active-bonuses');
+    activeBonusesList.innerHTML = '';
+
+    // 使用 TechTreeManager 獲取效果
+    // 注意：TechTreeUI 定義在下面，但 TechTreeManager 可以擴充 helper
+    // 這裡我們直接遍歷
+    const activeEffects = [];
+    player.unlockedTechs.forEach(techId => {
+        const tech = TECH_CARDS[techId];
+        if (tech && tech.effects) {
+            Object.entries(tech.effects).forEach(([k, v]) => {
+                // 借用 TechTreeUI 的格式化函數 (需確保 TechTreeUI 已被定義或提升)
+                // 由於 TechTreeUI 在下方定義，我們這裡可能存取不到? 
+                // JS function hoisting 不適用於 const assign。
+                // 我們可以把 formatEffect 移動到 TechTreeManager 或獨立 helper。
+                // 為了避免大規模重構，這裡先簡單處理，或者呼叫一個我們稍後會在 TechTreeManager 加上的 helper。
+                activeEffects.push(`${tech.name}: ${TechTreeManager.getTechEffectDescription ? TechTreeManager.getTechEffectDescription(k, v) : k}`);
+            });
+        }
+    });
+
+    if (activeEffects.length > 0) {
+        activeEffects.forEach(text => {
+            const li = document.createElement('li');
+            li.textContent = text;
+            activeBonusesList.appendChild(li);
+        });
+        activeBonusesDiv.classList.remove('hidden');
+    } else {
+        activeBonusesDiv.classList.add('hidden');
+    }
 
     showScreen('invest');
 }
 
-function updateMultiplierBadges() {
+function updateMultiplierBadges(player) {
+    const multipliers = TechTreeManager.getEffectiveMultipliers(player);
     ['brain', 'guts', 'muscle'].forEach(type => {
         const badge = document.getElementById(`mult-${type}`);
-        const m = game.multipliers[type];
-        if (m !== 1) {
+        const m = multipliers[type];
+        const base = game.baseMultipliers[type];
+
+        // 顯示條件：數值不為 1，或是與基礎環境數值不同（代表有技術介入）
+        if (m !== 1 || m !== base) {
             badge.textContent = `×${m}`;
             badge.classList.remove('hidden');
+
+            // 樣式邏輯
+            if (m > base) {
+                // 技術帶來增益 (抵消懲罰或額外加成)
+                badge.style.backgroundColor = '#4CAF50'; // Green
+                badge.style.color = 'white';
+            } else if (m < 1) {
+                // 負面效果
+                badge.style.backgroundColor = '#F44336'; // Red
+                badge.style.color = 'white';
+            } else {
+                // 正面效果 (環境自帶)
+                badge.style.backgroundColor = '#2196F3'; // Blue (Default)
+                badge.style.color = 'white';
+            }
         } else {
             badge.classList.add('hidden');
         }
@@ -536,9 +619,10 @@ function calcReward(type, val) {
     return base;
 }
 
-function calcRewardWithMultiplier(type, val) {
+function calcRewardWithMultiplier(player, type, val) {
     const base = calcReward(type, val);
-    return Math.floor(base * game.multipliers[type]);
+    const multipliers = TechTreeManager.getEffectiveMultipliers(player);
+    return Math.floor(base * multipliers[type]);
 }
 
 function updateInvestUI() {
@@ -557,9 +641,9 @@ function updateInvestUI() {
     document.getElementById('value-muscle').textContent = bids.muscle;
 
     // 加入乘數計算的預估
-    document.getElementById('reward-brain').textContent = calcRewardWithMultiplier('brain', bids.brain);
-    document.getElementById('reward-guts').textContent = '+' + calcRewardWithMultiplier('guts', bids.guts);
-    document.getElementById('reward-muscle').textContent = calcRewardWithMultiplier('muscle', bids.muscle);
+    document.getElementById('reward-brain').textContent = calcRewardWithMultiplier(player, 'brain', bids.brain);
+    document.getElementById('reward-guts').textContent = '+' + calcRewardWithMultiplier(player, 'guts', bids.guts);
+    document.getElementById('reward-muscle').textContent = calcRewardWithMultiplier(player, 'muscle', bids.muscle);
 
     document.getElementById('reserved-energy').textContent = reserved;
 
@@ -567,8 +651,8 @@ function updateInvestUI() {
     // 預估值包含：目前保留 + 消化收益 + 基礎收入 (10) + 待處理的增減 (pendingEnergy)
     // 這裡的 pendingEnergy 還不知道本回合的掠奪結果 (因為還沒發生)，所以只能是 0 (因為 startRound 已清空)
     // 這樣沒問題，玩家只能看到已知的。
-    const estimatedYield = calcRewardWithMultiplier('guts', bids.guts);
-    const estimatedTotal = reserved + estimatedYield + TOTAL_ENERGY + player.pendingEnergy;
+    const estimatedYield = calcRewardWithMultiplier(player, 'guts', bids.guts);
+    const estimatedTotal = reserved + estimatedYield + BASE_ENERGY + player.pendingEnergy;
 
     document.getElementById('forecast-total').textContent = estimatedTotal >= 0 ? estimatedTotal : 0;
 
@@ -576,6 +660,7 @@ function updateInvestUI() {
     const btn = document.getElementById('confirm-btn');
 
     const MAX_RESERVE = 5;
+    const MIN_GUTS = 3; // 最低消化投資
 
     if (reserved < 0) {
         warning.textContent = '超出預算！請減少投資。';
@@ -583,6 +668,10 @@ function updateInvestUI() {
         btn.disabled = true;
     } else if (reserved > MAX_RESERVE) {
         warning.textContent = `保留上限 ${MAX_RESERVE}！請再投資 ${reserved - MAX_RESERVE} 能量。`;
+        warning.classList.remove('hidden');
+        btn.disabled = true;
+    } else if (game.requireGuts === true && bids.guts < MIN_GUTS) {
+        warning.textContent = `生存規則：消化投資至少需要 ${MIN_GUTS} 點能量！`;
         warning.classList.remove('hidden');
         btn.disabled = true;
     } else {
@@ -609,12 +698,12 @@ function confirmInvest() {
     const reserved = player.energy - spent;
 
     // 結算時套用乘數 (本回合收益)
-    const energyGain = calcRewardWithMultiplier('guts', player.bids.guts);
+    const energyGain = calcRewardWithMultiplier(player, 'guts', player.bids.guts);
 
     player.results = {
-        ap: calcRewardWithMultiplier('brain', player.bids.brain),    // 大腦 -> AP (用於累積技術)
+        ap: calcRewardWithMultiplier(player, 'brain', player.bids.brain),    // 大腦 -> AP (用於累積技術)
         energy: energyGain,                                          // 消化 -> 能量
-        actions: calcRewardWithMultiplier('muscle', player.bids.muscle), // 肌肉 -> 行動點 (用於本回合執行)
+        actions: calcRewardWithMultiplier(player, 'muscle', player.bids.muscle), // 肌肉 -> 行動點 (用於本回合執行)
         reserved: reserved
     };
 
@@ -679,6 +768,16 @@ const TechTreeManager = {
                 return tech.requires.every(reqId => this.hasTech(player, reqId));
             }
         }
+
+        // 檢查 Tier 4 技術數量需求 (Tier 5)
+        if (tech.requiresTier4Count) {
+            const t4Count = player.unlockedTechs.filter(id => {
+                const t = TECH_CARDS[id];
+                return t && t.tier === 4;
+            }).length;
+            if (t4Count < tech.requiresTier4Count) return false;
+        }
+
         return true;
     },
 
@@ -742,6 +841,16 @@ const TechTreeManager = {
                         prereqMet = tech.requires.every(req => player.unlockedTechs.includes(req));
                     }
                 }
+
+                // 檢查 Tier 4 技術數量需求 (Tier 5)
+                if (tech.requiresTier4Count) {
+                    const t4Count = player.unlockedTechs.filter(id => {
+                        const t = TECH_CARDS[id];
+                        return t && t.tier === 4;
+                    }).length;
+                    if (t4Count < tech.requiresTier4Count) prereqMet = false;
+                }
+
                 // Tier 1 技術沒有前置，自動滿足
                 if (prereqMet || tech.tier === 1) {
                     available.push(tech);
@@ -796,6 +905,12 @@ const TechTreeManager = {
         });
         // 2. 組合加成
         score += this.checkComboBonuses(player);
+
+        // 3. 特殊效果：累積文化棘輪 (每個技術 +1 CCS)
+        if (player.unlockedTechs.includes('cumulative_culture')) {
+            score += player.unlockedTechs.length;
+        }
+
         return score;
     },
 
@@ -822,6 +937,47 @@ const TechTreeManager = {
         }
 
         return bonus;
+    },
+    // 顯示技術效果描述
+    getTechEffectDescription(key, value) {
+        return TechTreeUI.formatEffect(key, value);
+    },
+
+    getEffectiveMultipliers(player) {
+        const base = game.baseMultipliers || { brain: 1, guts: 1, muscle: 1 };
+        const mults = { ...base };
+        const eventId = game.currentEvent ? game.currentEvent.id : null;
+        if (eventId) {
+            player.unlockedTechs.forEach(techId => {
+                const tech = TECH_CARDS[techId];
+                if (tech && tech.eventModifiers && tech.eventModifiers[eventId]) {
+                    const mods = tech.eventModifiers[eventId];
+                    if (mods.brain) mults.brain *= mods.brain;
+                    if (mods.guts) mults.guts *= mods.guts;
+                    if (mods.muscle) mults.muscle *= mods.muscle;
+                }
+            });
+        }
+        return mults;
+    },
+
+    // 取得玩家所有生效中的技術效果列表
+    getActiveEffects(player) {
+        const effects = [];
+        player.unlockedTechs.forEach(techId => {
+            const tech = TECH_CARDS[techId];
+            if (tech && tech.effects) {
+                for (const [key, val] of Object.entries(tech.effects)) {
+                    // 排除一次性或開關型效果，只顯示數值型加成或特殊能力
+                    // 這裡可以根據需要過濾
+                    effects.push({
+                        source: tech.name,
+                        desc: this.getTechEffectDescription(key, val)
+                    });
+                }
+            }
+        });
+        return effects;
     }
 };
 
@@ -975,7 +1131,14 @@ const TechTreeUI = {
 
         // 渲染前置需求
         const reqEl = document.getElementById('modal-tech-requirements');
-        if (tech.requires && tech.requires.length > 0) {
+
+        if (tech.requiresTier4Count) {
+            const currentT4 = player.unlockedTechs.filter(id => TECH_CARDS[id] && TECH_CARDS[id].tier === 4).length;
+            const isMet = currentT4 >= tech.requiresTier4Count;
+            const icon = isMet ? '✓' : '✗';
+            const className = isMet ? 'req-met' : 'req-missing';
+            reqEl.innerHTML = `<span class="${className}">${icon} 需要任 ${tech.requiresTier4Count} 個 Tier 4 技術 (目前: ${currentT4})</span>`;
+        } else if (tech.requires && tech.requires.length > 0) {
             const reqTexts = tech.requires.map(reqId => {
                 const reqTech = TECH_CARDS[reqId];
                 const hasTech = TechTreeManager.hasTech(player, reqId);
@@ -1017,12 +1180,12 @@ const TechTreeUI = {
     // 格式化效果文字
     formatEffect(key, value) {
         const effectMap = {
-            digestionReduction: `消化成本 -${Math.round(value * 100)}%`,
-            brainBonus: `大腦投資回報 +${Math.round(value * 100)}%`,
-            energyCapBonus: `能量上限 +${value}`,
-            unlimitedStorage: '可無限儲存能量',
+            digestionReduction: `消化效率 +${Math.round(value * 100)}% (節省能量)`,
+            brainBonus: `AP 產出 +${Math.round(value * 100)}%`,
+            energyCapBonus: `每回合額外 +${value} 能量`,
+            unlimitedStorage: '能量儲存無上限',
             passiveEnergy: `每回合 +${value} 能量`,
-            muscleReduction: `肌肉投資成本 -${Math.round(value * 100)}%`,
+            muscleReduction: `肌肉投資效率 +${Math.round(value * 100)}%`,
             freeMuscleInvestment: `每回合免費 +${value} 肌肉投資`,
             huntingBonus: `狩獵額外 +${value} 能量`,
             investmentBonus: `所有投資回報 +${Math.round(value * 100)}%`,
@@ -1035,7 +1198,8 @@ const TechTreeUI = {
             eventPreview: '可預覽環境事件',
             eventReroll: '可重抽環境事件',
             negativeEventImmunity: '免疫負面環境事件',
-            bonusAP: `每回合額外 +${value} AP`
+            bonusAP: `每回合額外 +${value} AP`,
+            ccsPerTech: '每個已解鎖技術 +1 CCS (勝利條件)'
         };
         return effectMap[key] || `${key}: ${value}`;
     },
@@ -1085,6 +1249,13 @@ const TechTreeUI = {
 
             // 更新行動 UI (有些技術可能解鎖新行動)
             updateActionUI();
+
+            // 檢查勝利條件：首位解鎖「累積文化」的玩家獲勝
+            if (this.currentTechId === 'cumulative_culture') {
+                game.winner = player;
+                showVictoryScreen(player);
+                return;
+            }
         } else {
             // 提示失敗
             const btn = document.getElementById('modal-unlock-btn');
@@ -1387,8 +1558,18 @@ function updateActionUI() {
 function performAction(type, targetIndex) {
     if (tempState.ap < 1) return;
 
+    // 檢查技術加成
+    // 再次確保 player 正確
+    const player = game.players[game.currentIndex];
+
+    // 簡單的狩獵加成檢查
+    let huntBonus = 0;
+    if (type === 'hunt' && TechTreeManager.hasTech(player, 'spear_hunting')) {
+        huntBonus = 1;
+    }
+
     if (type === 'hunt') {
-        tempState.energyChange += 1;
+        tempState.energyChange += (1 + huntBonus);
         tempState.counts.hunt++;
         tempState.ap--;
     } else if (type === 'farm') {
@@ -1434,13 +1615,19 @@ function showPersonalResult(player) {
     const reservedEl = document.getElementById('personal-reserved');
     if (reservedEl) reservedEl.textContent = player.results.reserved;
 
-    // 下回合可用 = 當前剩餘 + 10 + 待處理調整 (被掠奪)
-    // 這裡顯示的尚未包含本回合之後可能發生的掠奪成功收益 (因為還沒結算)
-    // 這是一個「暫定」預覽。
-    let nextTotal = player.energy + TOTAL_ENERGY + player.pendingEnergy;
+    // 計算潛在收益
+    // const multipliers = TechTreeManager.getEffectiveMultipliers(player); // 暫時未使用，保留供未來擴充
+    let huntReward = 1;
+    if (TechTreeManager.hasTech(player, 'spear_hunting')) huntReward += 1;
+
+    // 簡單預估：剩餘 AP * huntReward
+    const potentialActions = player.actionPoints * huntReward;
+
+    let nextTotal = player.energy + BASE_ENERGY + player.pendingEnergy + potentialActions;
     if (nextTotal < 0) nextTotal = 0;
 
-    document.getElementById('personal-next-total').textContent = nextTotal;
+    document.getElementById('personal-potentials').textContent = `+${potentialActions}`;
+    document.getElementById('personal-final-next').textContent = nextTotal;
 
     const isLast = game.currentIndex >= game.players.length - 1;
     document.getElementById('next-player-btn').textContent = isLast ? '查看結算' : '交給下一位';
@@ -1503,7 +1690,7 @@ function showResult() {
     game.players.forEach(p => {
         const row = document.createElement('tr');
         // 修正：總可用能量 (預測下回合起始)
-        let nextTotal = p.energy + TOTAL_ENERGY + p.pendingEnergy;
+        let nextTotal = p.energy + BASE_ENERGY + p.pendingEnergy;
         if (nextTotal < 0) nextTotal = 0;
 
         // 生成行動階段的描述字串
@@ -1525,15 +1712,15 @@ function showResult() {
         `;
         tbody.appendChild(row);
 
-        // 檢查盧比孔門檻 (30 CCS)
-        if (p.ccs >= 30) {
+        // 檢查盧比孔門檻 (Custom CCS)
+        if (p.ccs >= game.targetCCS) {
             rubiconWinner = p;
         }
     });
 
     if (rubiconWinner) {
         setTimeout(() => {
-            alert(`${rubiconWinner.name} 已達成盧比孔門檻 (30 CCS)，完成文化演化突破！`);
+            alert(`${rubiconWinner.name} 已達成盧比孔門檻 (${game.targetCCS} CCS)，完成文化演化突破！`);
             showGameOver();
         }, 500);
         return;
@@ -1561,7 +1748,40 @@ document.getElementById('next-round-btn').addEventListener('click', () => {
     }
 });
 
+// 顯示勝利畫面 (技術勝利)
+function showVictoryScreen(winner) {
+    document.querySelector('.subtitle').textContent = '文化演化最終王者 (解鎖累積文化)';
+
+    document.getElementById('winner-name').textContent = winner.name;
+    document.getElementById('winner-score').textContent = winner.ccs;
+
+    const ranked = [...game.players].sort((a, b) => {
+        if (a === winner) return -1;
+        if (b === winner) return 1;
+        if (b.ccs !== a.ccs) return b.ccs - a.ccs;
+        return b.energy - a.energy;
+    });
+
+    const tbody = document.getElementById('final-rank-body');
+    tbody.innerHTML = '';
+    ranked.forEach((p, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${p.name}${p === winner ? ' 🏆' : ''}</td>
+            <td>${p.ccs}</td>
+            <td>${p.energy}</td>
+            <td>${p.unlockedTechs.length}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    showScreen('gameOver');
+}
+
 function showGameOver() {
+    document.querySelector('.subtitle').textContent = '文化演化最終王者';
+
     const ranked = [...game.players].sort((a, b) => {
         if (b.ccs !== a.ccs) return b.ccs - a.ccs;
         return b.energy - a.energy;
