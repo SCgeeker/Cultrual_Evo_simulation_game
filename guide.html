@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文化演化賽局 — 試玩引導手冊</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-surface: #0f3460;
+            --accent: #e94560;
+            --text-primary: #eee;
+            --text-secondary: #aaa;
+            --brain-color: #64b5f6;
+            --guts-color: #81c784;
+            --muscle-color: #ffb74d;
+            --theory-color: #ce93d8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', 'Noto Sans TC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.75;
+            padding: 16px;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .nav-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .back-btn {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.85; }
+        .manual-btn {
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            text-align: center;
+            margin-bottom: 6px;
+            color: var(--accent);
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-bottom: 28px;
+        }
+
+        /* TOC */
+        .toc {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 28px;
+            font-size: 0.87rem;
+        }
+        .toc-title {
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        .toc a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: block;
+            padding: 2px 0;
+        }
+        .toc a:hover { color: var(--text-primary); }
+        .toc .toc-sub { padding-left: 16px; }
+
+        h2 {
+            font-size: 1.2rem;
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 6px;
+            margin: 32px 0 14px;
+        }
+        h3 {
+            font-size: 1rem;
+            color: var(--brain-color);
+            margin: 20px 0 8px;
+        }
+        h4 {
+            font-size: 0.92rem;
+            color: var(--muscle-color);
+            margin: 14px 0 6px;
+        }
+
+        p { margin-bottom: 10px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 0.84rem;
+        }
+        th, td {
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: var(--bg-surface);
+            color: var(--accent);
+            font-weight: 600;
+        }
+        td { background: var(--bg-card); }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin: 12px 0;
+            border-left: 4px solid var(--accent);
+        }
+        .card.tip  { border-left-color: var(--guts-color); }
+        .card.theory { border-left-color: var(--theory-color); }
+        .card.warn { border-left-color: var(--muscle-color); }
+        .card.q    { border-left-color: var(--brain-color); }
+
+        ul, ol { padding-left: 22px; margin-bottom: 10px; }
+        li { margin-bottom: 4px; }
+
+        /* week tabs */
+        .week-block {
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin: 14px 0;
+            overflow: hidden;
+        }
+        .week-header {
+            background: var(--bg-surface);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .week-badge {
+            background: var(--accent);
+            color: white;
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .week-title { font-weight: 600; }
+        .week-ch { color: var(--text-secondary); font-size: 0.82rem; margin-left: auto; }
+        .week-body { padding: 14px 16px; }
+
+        .qs-list {
+            list-style: none;
+            padding: 0;
+        }
+        .qs-list li {
+            padding: 6px 0 6px 24px;
+            position: relative;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .qs-list li:last-child { border-bottom: none; }
+        .qs-list li::before {
+            content: '💬';
+            position: absolute;
+            left: 0;
+            font-size: 0.9em;
+        }
+
+        .step {
+            display: flex;
+            gap: 12px;
+            margin: 10px 0;
+            align-items: flex-start;
+        }
+        .step-num {
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .mechanic-tag {
+            display: inline-block;
+            background: var(--bg-surface);
+            border-radius: 5px;
+            padding: 1px 8px;
+            font-size: 0.78rem;
+            color: var(--guts-color);
+            margin: 1px 2px;
+        }
+
+        .pause-box {
+            background: rgba(100,181,246,0.08);
+            border: 1px dashed var(--brain-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin: 10px 0;
+            font-size: 0.88rem;
+        }
+        .pause-box .label {
+            color: var(--brain-color);
+            font-weight: 700;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-top: 48px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav-row">
+    <a href="index.html" class="back-btn">← 返回遊戲</a>
+    <a href="manual.html" class="back-btn manual-btn">📖 玩家手冊</a>
+</div>
+
+<h1>文化演化賽局</h1>
+<p class="subtitle">試玩引導手冊 — 教師版 · Phase 1（W1–W6）</p>
+
+<!-- 目錄 -->
+<div class="toc">
+    <div class="toc-title">📋 本冊結構</div>
+    <a href="#how-to-use">如何使用本冊</a>
+    <a href="#before-play">遊戲前引導（W1 設定）</a>
+    <a href="#during-play">遊戲中暫停點</a>
+    <a href="#weekly-q">各週課後反思問題（W1–W6）</a>
+    <a href="#mapping">遊戲機制 × 理論對照表</a>
+</div>
+
+<!-- ── 0. 如何使用 ── -->
+<h2 id="how-to-use">如何使用本冊</h2>
+
+<p>本冊供第一次帶領學生試玩《文化演化之代價》的教師使用，搭配 Henrich《The Secret of Our Success》（SOS）一書的課堂教學。</p>
+
+<div class="card">
+    <strong>設計邏輯：</strong>遊戲不是課本圖解，而是<strong>產生困惑的機器</strong>。<br>
+    學生在面對能量取捨困境時，自然產生的疑問（「為什麼偏偏大腦和腸道不能同時最大化？」）就是導入理論的最佳入口。<br>
+    教師的任務是：在正確的時機暫停，讓困惑轉化為概念。
+</div>
+
+<table>
+    <thead><tr><th>章節</th><th>使用時機</th></tr></thead>
+    <tbody>
+        <tr><td>遊戲前引導</td><td>W1 第一次試玩前（約 10 分鐘）</td></tr>
+        <tr><td>遊戲中暫停點</td><td>W1–W3 試玩過程中（視班級節奏選用）</td></tr>
+        <tr><td>各週反思問題</td><td>每次遊戲結束後的討論（10–20 分鐘）</td></tr>
+        <tr><td>理論對照表</td><td>W2 起備課快速查閱</td></tr>
+    </tbody>
+</table>
+
+<!-- ── 1. 遊戲前引導 ── -->
+<h2 id="before-play">遊戲前引導（W1 設定）</h2>
+
+<h3>建議遊戲設定（W1 快速試玩）</h3>
+<table>
+    <thead><tr><th>參數</th><th>建議值</th><th>理由</th></tr></thead>
+    <tbody>
+        <tr><td>玩家人數</td><td>3 人</td><td>社會互動可見，不過度複雜</td></tr>
+        <tr><td>最大回合數</td><td>15</td><td>45 分鐘內可完成</td></tr>
+        <tr><td>勝利目標（CCS）</td><td>20</td><td>確保在課堂時間內有人獲勝</td></tr>
+        <tr><td>基礎能量</td><td>10</td><td>預設值，能量緊張感清晰</td></tr>
+        <tr><td>強制消化投資</td><td>關閉</td><td>第一次先感受自由取捨</td></tr>
+    </tbody>
+</table>
+
+<h3>開場提問（試玩前 5 分鐘）</h3>
+<p>請學生在試玩前思考以下問題——<strong>不需要有答案</strong>，只是帶著問題進入遊戲：</p>
+
+<div class="card q">
+    <ol>
+        <li>如果你只有 10 單位的食物能量，你會花在鍛鍊身體、消化吸收，還是思考學習上？為什麼？</li>
+        <li>人類的大腦是所有哺乳類中最昂貴的器官之一——你覺得是什麼「付了這筆帳」？</li>
+        <li>你認為一個原始部落什麼時候「值得」花時間學語言，而不是直接去打獵？</li>
+    </ol>
+</div>
+
+<h3>遊戲核心比喻（1 分鐘口頭說明）</h3>
+<div class="card tip">
+    <p>「這個遊戲的核心問題很簡單：<strong>你是一個原始部落，每回合只有 10 點能量。</strong></p>
+    <p>你可以把它全部投入大腦，把它全部投入消化，把它全部投入肌肉——但你不能同時把所有東西都最大化。</p>
+    <p>這個限制不是遊戲設計師的任意決定。<strong>這正是我們人類演化史上真正面對過的問題。</strong>」</p>
+</div>
+
+<!-- ── 2. 遊戲中暫停點 ── -->
+<h2 id="during-play">遊戲中暫停點</h2>
+<p>以下是建議在遊戲過程中暫停討論的時機。每個暫停點只需 2–3 分鐘，目的是把遊戲困境與理論概念短暫連結。<strong>不要過度解說</strong>——留到遊戲結束後的反思討論。</p>
+
+<div class="pause-box">
+    <div class="label">⏸ 暫停點 1：第一次投資分配後</div>
+    <strong>觸發時機：</strong>所有玩家完成第 1 回合的 🧠 / 🍖 / 💪 分配<br>
+    <strong>問題：</strong>「你分配的邏輯是什麼？有人能解釋一下為什麼這樣分？」<br>
+    <em>目的：讓學生說出自己的決策直覺，留待 W2–W3 與理論對照。</em>
+</div>
+
+<div class="pause-box">
+    <div class="label">⏸ 暫停點 2：第一張技術卡解鎖後</div>
+    <strong>觸發時機：</strong>任何玩家解鎖第一張技術卡（通常是石器製作或語言 Lv.1）<br>
+    <strong>問題：</strong>「解鎖這張卡之後，下一步的計畫改變了嗎？為什麼？」<br>
+    <em>目的：引入技術前置依賴 → 棘輪效應的直覺。</em>
+</div>
+
+<div class="pause-box">
+    <div class="label">⏸ 暫停點 3：遇到負面事件（冰河時期 / 資源匱乏）後</div>
+    <strong>觸發時機：</strong>出現對全體不利的環境事件<br>
+    <strong>問題：</strong>「這個事件讓你的計畫受挫了嗎？你是跟著環境調整，還是照原計畫？」<br>
+    <em>目的：文化技術是否能緩衝環境壓力？留待 W3 討論基因–文化共演化。</em>
+</div>
+
+<div class="pause-box">
+    <div class="label">⏸ 暫停點 4：族群認同技術解鎖後（若在時間內出現）</div>
+    <strong>觸發時機：</strong>任何玩家解鎖「族群認同」（解鎖掠奪 / 防禦 / 結盟）<br>
+    <strong>問題：</strong>「現在可以掠奪或結盟了。你打算合作還是競爭？對你的長期策略有什麼影響？」<br>
+    <em>目的：社會行動的出現使遊戲從個人最佳化轉向群體互動——留待 W5 討論社會規範。</em>
+</div>
+
+<!-- ── 3. 各週反思問題 ── -->
+<h2 id="weekly-q">各週課後反思問題（W1–W6）</h2>
+<p>每次遊戲結束後，選 2–3 個問題進行 10–20 分鐘討論。問題設計為<strong>由遊戲經驗導入書本概念</strong>——先讓學生說出遊戲中的感受，再連接理論。</p>
+
+<!-- W1 -->
+<div class="week-block">
+    <div class="week-header">
+        <span class="week-badge">W1</span>
+        <span class="week-title">課程導論：人類為何特別？</span>
+        <span class="week-ch">SOS CH 01–03</span>
+    </div>
+    <div class="week-body">
+        <p><strong>遊戲活動：</strong>文化演化賽局快速試玩（15 回合 / CCS 目標 20）</p>
+        <ul class="qs-list">
+            <li>遊戲一開始，你的策略是什麼？你是如何決定第一步的？</li>
+            <li>你覺得哪一項投資（大腦 / 消化 / 肌肉）最重要？為什麼？</li>
+            <li>如果你的部落被剝奪了所有已解鎖的技術卡，只剩下能量，你還能「活下去」嗎？這讓你想到什麼？</li>
+            <li>遊戲中的「技術卡」代表什麼？你認為真實的人類部落是怎麼累積這些知識的？</li>
+        </ul>
+        <div class="card theory">
+            <strong>理論連結（CH 01–03 核心）：</strong>Henrich 的核心論點是——人類不是因為個體智慧才成功，而是因為我們是「文化物種」，依賴累積的集體知識生存。被剝奪文化技術的個體，甚至比不上當地的猴子（歐洲探險家困境）。
+        </div>
+    </div>
+</div>
+
+<!-- W2 -->
+<div class="week-block">
+    <div class="week-header">
+        <span class="week-badge">W2</span>
+        <span class="week-title">文化學習機制</span>
+        <span class="week-ch">SOS CH 04</span>
+    </div>
+    <div class="week-body">
+        <p><strong>遊戲活動：</strong>賽局回顧 + 反思討論</p>
+        <ul class="qs-list">
+            <li>你是如何決定要解鎖哪張技術卡的？你有觀察其他玩家的選擇嗎？</li>
+            <li>你有沒有模仿過成功玩家的策略？為什麼選擇模仿（或不模仿）？</li>
+            <li>如果你看到對手解鎖了「烹飪技術」並獲得更多能量，你會立刻跟進嗎？還是會觀察更多回合？</li>
+            <li>遊戲中有沒有某個時刻，你「只是照著前一個成功案例做」，而不理解為什麼有效？</li>
+        </ul>
+        <div class="card theory">
+            <strong>理論連結（CH 04 核心）：</strong>選擇性社會學習的三個偏誤——<strong>聲望偏誤</strong>（追隨成功者）、<strong>年齡偏誤</strong>（向長者學）、<strong>心智化線索</strong>（判斷值得模仿的跡象）。語言 Lv.1 解鎖後「可以查看對手投資分配」，這正是資訊傳遞讓模仿更有效率的機制。
+        </div>
+    </div>
+</div>
+
+<!-- W3 -->
+<div class="week-block">
+    <div class="week-header">
+        <span class="week-badge">W3</span>
+        <span class="week-title">昂貴組織權衡假說</span>
+        <span class="week-ch">SOS CH 05–06</span>
+    </div>
+    <div class="week-body">
+        <p><strong>遊戲活動：</strong>桌遊快速模式試玩（30 分鐘，開啟「強制消化投資」規則）</p>
+        <ul class="qs-list">
+            <li>開啟「強制消化投資」後，遊戲的感覺有什麼不同？你的策略改變了嗎？</li>
+            <li>解鎖「烹飪技術」後，消化成本下降了——你把省下的能量花到哪裡了？為什麼？</li>
+            <li>遊戲中「大腦 / 消化 / 肌肉」是零和的。你覺得現實中人體的這三個系統也是這樣「競爭能量」的嗎？</li>
+            <li>有沒有哪張技術卡讓你覺得「解鎖了它，遊戲的取捨邏輯就不一樣了」？</li>
+        </ul>
+        <div class="card theory">
+            <strong>理論連結（CH 05–06 核心）：</strong>昂貴組織假說——文化技術（烹飪）讓腸道縮小，釋放能量供大腦擴大，形成自催化循環。CH 06 延伸：文化創造基因選擇壓力（如牧牛文化 → 乳糖耐受基因）。遊戲中技術卡改變三軌投資報酬率，正是模擬這個機制。
+        </div>
+    </div>
+</div>
+
+<!-- W4 -->
+<div class="week-block">
+    <div class="week-header">
+        <span class="week-badge">W4</span>
+        <span class="week-title">因果不透明、過度模仿與 CREDs</span>
+        <span class="week-ch">SOS CH 07</span>
+    </div>
+    <div class="week-body">
+        <p><strong>遊戲活動：</strong>反思討論</p>
+        <ul class="qs-list">
+            <li>遊戲中，你有解鎖過「根本不確定有沒有用」的技術卡嗎？為什麼還是解鎖了？</li>
+            <li>如果一張技術卡沒有清楚說明效果，但你看到另一個玩家解鎖後表現變好——你會仿效嗎？</li>
+            <li>有哪個遊戲決策是「照慣例做」而不是「有意識分析」的？</li>
+            <li>遊戲中的「族群認同」技術讓玩家願意冒險掠奪或防禦——你在現實中有沒有因為「群體認同」而做出平時不會做的事？</li>
+        </ul>
+        <div class="card theory">
+            <strong>理論連結（CH 07 核心）：</strong><strong>因果不透明性</strong>——我們遵守文化規範卻不理解背後機制（木薯脫毒程序案例）。<strong>CREDs（誠信增強行為）</strong>——「代價昂貴的示範」讓信仰可信（宗教領袖的犧牲式行為）。這兩個概念解釋了為何文化傳承不需要完全理解，也能有效運作。
+        </div>
+    </div>
+</div>
+
+<!-- W5 -->
+<div class="week-block">
+    <div class="week-header">
+        <span class="week-badge">W5</span>
+        <span class="week-title">社會規範、聲望與自我馴化</span>
+        <span class="week-ch">SOS CH 08–11</span>
+    </div>
+    <div class="week-body">
+        <p><strong>遊戲活動：</strong>桌遊完整模式（60 分鐘，啟用結盟規則）</p>
+        <ul class="qs-list">
+            <li>你有沒有在遊戲中形成「默契」，即使沒有明確協議？（例如大家都不掠奪弱勢玩家）</li>
+            <li>「結盟」讓你的策略改變了嗎？你的盟友是如何影響你的決策的？</li>
+            <li>有沒有某個玩家因為「名聲好」（比如從不掠奪）而獲得了別人的合作？</li>
+            <li>遊戲中的「社會規範卡」（可對他人施加懲罰）——你用了嗎？什麼情況下你願意付出代價去懲罰別人？</li>
+            <li>如果你在遊戲中做了一個「道德上有問題」的決定（比如掠奪剛入局的弱勢玩家），你會有什麼感覺？</li>
+        </ul>
+        <div class="card theory">
+            <strong>理論連結（CH 08–11 核心）：</strong>CH 08 聲望 vs 支配兩種地位。CH 09 婚姻規範、儀式標記群體邊界。CH 10 群體間競爭篩選親社會規範。CH 11 自我馴化——社會制裁系統性淘汰攻擊性基因，演化出羞恥感與規範心理學。
+        </div>
+    </div>
+</div>
+
+<!-- W6 -->
+<div class="week-block">
+    <div class="week-header">
+        <span class="week-badge">W6</span>
+        <span class="week-title">集體大腦、語言與文化差異的生物學</span>
+        <span class="week-ch">SOS CH 12–14</span>
+    </div>
+    <div class="week-body">
+        <p><strong>遊戲活動：</strong>反思討論（重點比較不同人數局的差異）</p>
+        <ul class="qs-list">
+            <li>3 人局和 5 人局的遊戲體驗有什麼不同？玩家越多，技術路線的多樣性是否增加？</li>
+            <li>你的技術樹有沒有被其他玩家的解鎖「帶動」過？（比如因為對手解鎖了某技術，讓你也有動力跟進）</li>
+            <li>假設遊戲中途，有玩家因故退出，你能「繼承」他已解鎖的技術帶來的優勢嗎？這讓你想到什麼？</li>
+            <li>【進階】如果有玩家長期只走「語言/社會」路線、另一玩家只走「工具/消化」路線，結局會有什麼差異？他們的「大腦」（決策風格）是否也會不同？</li>
+        </ul>
+        <div class="card theory">
+            <strong>理論連結（CH 12–14 核心）：</strong>CH 12 集體大腦——人口規模 × 網絡密度決定文化容量（塔斯馬尼亞效應）。CH 13 語言是溝通工具的累積文化演化。<strong>CH 14 橋樑</strong>：文化差異是生物性差異（非遺傳性）——不同制度環境塑造不同的神經結構與荷爾蒙反應。這是理解 WEIRD 心理差異的生物學基礎。
+        </div>
+    </div>
+</div>
+
+<!-- ── 4. 機制 × 理論對照表 ── -->
+<h2 id="mapping">遊戲機制 × 理論對照表</h2>
+<p>快速查閱：遊戲中的每個核心機制對應 SOS 的哪個概念？</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>遊戲機制</th>
+            <th>SOS 理論概念</th>
+            <th>對應章節</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>三軌投資（🧠 🍖 💪）取捨</td>
+            <td>昂貴組織權衡假說（Expensive Tissue Trade-off）</td>
+            <td>CH 05</td>
+        </tr>
+        <tr>
+            <td>技術卡改變投資報酬率<br><span class="mechanic-tag">烹飪→消化成本↓</span></td>
+            <td>文化技術驅動基因-文化共演化</td>
+            <td>CH 05–06</td>
+        </tr>
+        <tr>
+            <td>技術前置依賴<br><span class="mechanic-tag">石器→火的控制</span></td>
+            <td>累積文化的棘輪效應（Ratchet Effect）</td>
+            <td>CH 01, 12</td>
+        </tr>
+        <tr>
+            <td>環境事件卡（隨機乘數）</td>
+            <td>環境壓力創造文化選擇壓力</td>
+            <td>CH 10, 16</td>
+        </tr>
+        <tr>
+            <td>語言 Lv.1：可查看對手投資</td>
+            <td>資訊傳遞讓社會學習更有效率</td>
+            <td>CH 04, 13</td>
+        </tr>
+        <tr>
+            <td>族群認同：解鎖掠奪 / 防禦 / 結盟</td>
+            <td>群體標記引導文化學習對象；群體間競爭</td>
+            <td>CH 09–10</td>
+        </tr>
+        <tr>
+            <td>社會規範卡：付代價懲罰他人</td>
+            <td>第三方懲罰、規範心理學</td>
+            <td>CH 11</td>
+        </tr>
+        <tr>
+            <td>多人互動 → 策略空間改變</td>
+            <td>集體大腦：人口規模 × 連通度 = 文化容量</td>
+            <td>CH 12</td>
+        </tr>
+        <tr>
+            <td>勝利條件：率先解鎖「累積文化」</td>
+            <td>累積文化演化 = 跨越盧比孔門檻</td>
+            <td>CH 15</td>
+        </tr>
+        <tr>
+            <td>遊戲起始（零資源）</td>
+            <td>啟動問題（Start-up Problem）：文化演化如何從零開始？</td>
+            <td>CH 16</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="card warn">
+    <strong>⚠️ 遊戲未覆蓋的理論（需課堂補充）：</strong>
+    <ul>
+        <li><strong>CH 07 CREDs</strong>（誠信增強行為）：遊戲無直接機制，可透過 W4 反思問題導入</li>
+        <li><strong>CH 14 榮譽文化 / 安慰劑效應</strong>：文化差異如何造成非遺傳性生物差異，需課堂補充說明作為 WEIRD 橋樑</li>
+        <li><strong>CH 17 制度設計洞見</strong>：遊戲的「設計感」本身就是一個教學起點——引導學生思考「為什麼這個遊戲規則會造成這樣的結果」</li>
+    </ul>
+</div>
+
+<!-- ── 5. 延伸閱讀 ── -->
+<h2 id="books">📚 延伸閱讀</h2>
+<p>想深入了解遊戲背後的科學理論，推薦閱讀以下兩本著作：</p>
+
+<div class="card theory" style="display:flex;gap:1.2rem;align-items:flex-start;flex-wrap:wrap;">
+    <div style="font-size:2.5rem;line-height:1;">📖</div>
+    <div style="flex:1;min-width:200px;">
+        <p style="margin:0 0 0.3rem;font-size:1rem;"><strong>The Secret of Our Success</strong></p>
+        <p style="margin:0 0 0.6rem;color:#aaa;font-size:0.85rem;">Joseph Henrich 著 | 遊戲理論主要依據</p>
+        <p style="margin:0 0 0.8rem;font-size:0.9rem;">本書解釋人類文化演化的核心機制——為何文化智慧遠超個體理性，以及文化如何塑造我們的大腦與行為。</p>
+        <a href="https://www.kobo.com/tw/zh/ebook/the-secret-of-our-success?srsltid=AfmBOoodCXcazqdKP2UIJLy4CI4t3pp3mqdhVe8jf6irUbenfQ-jLHwv"
+            target="_blank"
+            style="display:inline-block;background:#e94560;color:white;text-decoration:none;padding:6px 16px;border-radius:8px;font-size:0.85rem;">
+            🛒 Kobo 電子書購買
+        </a>
+    </div>
+</div>
+
+<div class="card theory" style="display:flex;gap:1.2rem;align-items:flex-start;flex-wrap:wrap;margin-top:1rem;">
+    <div style="font-size:2.5rem;line-height:1;">📖</div>
+    <div style="flex:1;min-width:200px;">
+        <p style="margin:0 0 0.3rem;font-size:1rem;"><strong>The WEIRDest People in the World</strong></p>
+        <p style="margin:0 0 0.6rem;color:#aaa;font-size:0.85rem;">Joseph Henrich 著 | Phase 4 延伸閱讀</p>
+        <p style="margin:0 0 0.8rem;font-size:0.9rem;">探討西方教育、工業化、富裕、民主（WEIRD）社會的心理特殊性，以及這些特質如何從中世紀教會制度的文化演化中產生。</p>
+        <a href="https://www.kobo.com/tw/zh/ebook/ynlx5hAJBjmEWaLpf8Wf6Q?sId=a0724536-9ca8-475f-951d-11da7e0a7987&ssId=PLjFds6qPtdZflX6fqk80&cPos=1"
+            target="_blank"
+            style="display:inline-block;background:#0f3460;color:#ce93d8;text-decoration:none;padding:6px 16px;border-radius:8px;font-size:0.85rem;border:1px solid #ce93d8;">
+            🛒 Kobo 電子書購買
+        </a>
+    </div>
+</div>
+
+<footer>
+    <p>文化演化賽局試玩引導手冊 | 基於《The Secret of Our Success》by Joseph Henrich</p>
+    <p>Version Phase 4 | 2026 | 供教師課堂引導使用</p>
+</footer>
+
+</body>
+</html>

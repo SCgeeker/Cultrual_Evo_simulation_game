@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文化演化賽局 - 玩家手冊</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-surface: #0f3460;
+            --accent: #e94560;
+            --text-primary: #eee;
+            --text-secondary: #aaa;
+            --brain-color: #64b5f6;
+            --guts-color: #81c784;
+            --muscle-color: #ffb74d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', 'Noto Sans TC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+            padding: 16px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.85; }
+
+        h1 {
+            font-size: 1.6rem;
+            text-align: center;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 6px;
+            margin: 28px 0 14px;
+        }
+
+        h3 {
+            font-size: 1rem;
+            color: var(--brain-color);
+            margin: 18px 0 8px;
+        }
+
+        p { margin-bottom: 10px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 0.85rem;
+        }
+        th, td {
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 10px;
+            text-align: left;
+        }
+        th {
+            background: var(--bg-surface);
+            color: var(--accent);
+            font-weight: 600;
+        }
+        td { background: var(--bg-card); }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            border-left: 4px solid var(--accent);
+        }
+        .card.tip {
+            border-left-color: var(--guts-color);
+        }
+        .card.theory {
+            border-left-color: var(--brain-color);
+        }
+
+        ul, ol {
+            padding-left: 24px;
+            margin-bottom: 10px;
+        }
+        li { margin-bottom: 4px; }
+
+        .emoji { font-size: 1.2em; }
+
+        .tech-path-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 2px 4px 2px 0;
+        }
+        .path-digestion { background: #4a1a1a; color: #ff8a65; }
+        .path-tools { background: #1a3a1a; color: #a5d6a7; }
+        .path-social { background: #1a1a4a; color: #90caf9; }
+        .path-environment { background: #2a3a1a; color: #c5e1a5; }
+
+        .evo-timeline {
+            position: relative;
+            padding-left: 28px;
+            margin: 16px 0;
+        }
+        .evo-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--accent);
+        }
+        .evo-era {
+            position: relative;
+            margin-bottom: 14px;
+        }
+        .evo-era::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 8px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+        .evo-era-title {
+            font-weight: 600;
+            color: var(--muscle-color);
+            font-size: 0.9rem;
+        }
+        .evo-era-techs {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 2px;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">← 返回遊戲</a>
+
+<h1>文化演化之代價</h1>
+<p class="subtitle">玩家手冊 — 1-5 人策略遊戲</p>
+
+<!-- 遊戲概述 -->
+<h2>遊戲概述</h2>
+<p>《文化演化之代價》是一款根據 Joseph Henrich《The Secret of Our Success》設計的策略遊戲。玩家扮演原始部落，在有限的能量預算下做出「發展大腦」「維護消化」「強化肌肉」三項投資決策，並透過解鎖技術卡累積文化複雜度。</p>
+<div class="card">
+    <strong>勝利條件：</strong>率先解鎖「累積文化」技術的玩家獲勝！<br>
+    累積文化代表人類獨特的累積性文化演化能力——每一代都能在前人基礎上持續進步。
+</div>
+
+<!-- 遊戲設置 -->
+<h2>遊戲設置</h2>
+<ol>
+    <li>選擇玩家人數（1-5 人）</li>
+    <li>設定遊戲參數：
+        <ul>
+            <li><strong>基礎能量</strong>：每回合獲得的能量（預設 10）</li>
+            <li><strong>最大回合數</strong>：遊戲上限回合（預設 20）</li>
+            <li><strong>強制消化投資</strong>：選用規則，需投資至少 3 點消化才能存活</li>
+        </ul>
+    </li>
+</ol>
+
+<!-- 回合結構 -->
+<h2>回合結構</h2>
+<p>每回合分為三個階段：</p>
+
+<h3>1. 事件階段</h3>
+<ul>
+    <li>隨機抽取環境事件卡</li>
+    <li>事件會影響本回合的投資乘數（×0.5 到 ×2）</li>
+    <li>特殊技術可預覽或重抽事件</li>
+</ul>
+
+<h3>2. 投資階段</h3>
+<p>每位玩家分配能量到三個領域：</p>
+<table>
+    <thead>
+        <tr><th>領域</th><th>投資規則</th><th>回報</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="emoji">🧠</span> 發展大腦</td><td>每 2 能量</td><td>獲得 1 AP（技術點）</td></tr>
+        <tr><td><span class="emoji">🍖</span> 維護消化</td><td>每 3 能量</td><td>下回合 +2 能量</td></tr>
+        <tr><td><span class="emoji">💪</span> 強化肌肉</td><td>每 2 能量</td><td>獲得 1 行動點</td></tr>
+    </tbody>
+</table>
+<div class="card tip">
+    <strong>提示：</strong>保留上限為 5 能量。投資回報受環境事件乘數影響。
+</div>
+
+<h3>3. 行動階段</h3>
+<p>使用行動點執行行動：</p>
+<table>
+    <thead>
+        <tr><th>行動</th><th>消耗</th><th>效果</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="emoji">🏹</span> 狩獵</td><td>1 行動點</td><td>+1 能量</td></tr>
+        <tr><td><span class="emoji">🛡️</span> 防禦</td><td>1 行動點</td><td>抵消 1 次掠奪（需 [族群認同]）</td></tr>
+        <tr><td><span class="emoji">🌾</span> 農耕</td><td>1 行動點</td><td>+2 能量（需 [食物保存]）</td></tr>
+        <tr><td><span class="emoji">⚔️</span> 掠奪</td><td>1 行動點</td><td>搶奪對手 2 能量（需 [族群認同]）</td></tr>
+    </tbody>
+</table>
+<p>同時可使用 AP（技術點）解鎖技術樹上的技術卡。</p>
+
+<!-- 技術樹 -->
+<h2>技術樹</h2>
+<p>技術分為五個等級（Tier 1-5），沿四條路徑發展，解鎖順序對應人類演化的時間軸：</p>
+
+<h3>四條路徑</h3>
+<p>
+    <span class="tech-path-badge path-digestion">🔥 外部消化</span>
+    <span class="tech-path-badge path-tools">🪨 工具製作</span>
+    <span class="tech-path-badge path-social">🗣️ 社會學習</span>
+    <span class="tech-path-badge path-environment">🌿 環境知識</span>
+</p>
+
+<table>
+    <thead>
+        <tr><th>路徑</th><th>主題</th><th>核心技術</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>🔥 外部消化</td><td>食物處理</td><td>火的控制 → 烹飪 → 食物保存</td></tr>
+        <tr><td>🪨 工具製作</td><td>物質技術</td><td>石器製作 → 長矛狩獵 → 複雜工具</td></tr>
+        <tr><td>🗣️ 社會學習</td><td>知識傳承</td><td>語言 → 族群認同 → 口語傳承</td></tr>
+        <tr><td>🌿 環境知識</td><td>生態智慧</td><td>採集知識 → 民俗生物學 → 環境適應</td></tr>
+    </tbody>
+</table>
+
+<h3>演化時間線</h3>
+<div class="evo-timeline">
+    <div class="evo-era">
+        <div class="evo-era-title">🦴 舊石器時代早期 (260-150萬年前)</div>
+        <div class="evo-era-techs">石器製作 — 最早的技術，所有路徑的起點</div>
+    </div>
+    <div class="evo-era">
+        <div class="evo-era-title">🔥 舊石器時代中期 (150-50萬年前)</div>
+        <div class="evo-era-techs">火的控制（需先有石器）、採集知識</div>
+    </div>
+    <div class="evo-era">
+        <div class="evo-era-title">🧠 認知革命 (50-30萬年前)</div>
+        <div class="evo-era-techs">烹飪技術、長矛狩獵、語言 Lv.1</div>
+    </div>
+    <div class="evo-era">
+        <div class="evo-era-title">🎨 行為現代性 (30-10萬年前)</div>
+        <div class="evo-era-techs">族群認同、民俗生物學</div>
+    </div>
+    <div class="evo-era">
+        <div class="evo-era-title">⚒️ 舊石器晚期 (10-5萬年前)</div>
+        <div class="evo-era-techs">複雜工具、口語傳承、社會規範、環境適應</div>
+    </div>
+    <div class="evo-era">
+        <div class="evo-era-title">🏛️ 文明曙光 (5萬-1萬年前)</div>
+        <div class="evo-era-techs">食物保存、人造物系統、教學系統</div>
+    </div>
+    <div class="evo-era">
+        <div class="evo-era-title">🚀 新石器革命 (1萬年前至今)</div>
+        <div class="evo-era-techs">資訊資源、累積文化</div>
+    </div>
+</div>
+
+<h3>技術成本</h3>
+<table>
+    <thead>
+        <tr><th>等級</th><th>AP 成本</th><th>CCS 分數</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Tier 1</td><td>2-3 AP</td><td>1</td></tr>
+        <tr><td>Tier 2</td><td>3-5 AP</td><td>2</td></tr>
+        <tr><td>Tier 3</td><td>5-8 AP</td><td>3</td></tr>
+        <tr><td>Tier 4</td><td>12 AP</td><td>5</td></tr>
+        <tr><td>Tier 5</td><td>15 AP</td><td>10</td></tr>
+    </tbody>
+</table>
+
+<h3>特殊技術</h3>
+<div class="card">
+    <p><strong>🏛️ 人造物系統</strong>（Tier 4）：需要「複雜工具」+「食物保存」兩條路徑匯聚</p>
+    <p><strong>🚀 累積文化</strong>（Tier 5）：需要任兩項 Tier 4 技術</p>
+    <p><strong>🔥 火的控制</strong>（Tier 1）：跨路徑演化前置 — 需先解鎖「石器製作」</p>
+</div>
+
+<!-- 策略提示 -->
+<h2>策略提示</h2>
+
+<div class="card tip">
+    <h3>基本策略</h3>
+    <ol>
+        <li><strong>早期</strong>：先解鎖石器製作（最早的技術），再決定主攻路徑</li>
+        <li><strong>中期</strong>：橫向發展，準備 Tier 4 前置需求</li>
+        <li><strong>後期</strong>：競爭 Tier 5 解鎖</li>
+    </ol>
+</div>
+
+<h3>路徑特色</h3>
+<table>
+    <thead>
+        <tr><th>路徑</th><th>優勢</th><th>適合玩家</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>🔥 外部消化</td><td>穩定能量收入，長期優勢</td><td>穩健型</td></tr>
+        <tr><td>🪨 工具製作</td><td>行動點優勢，可強化狩獵</td><td>攻擊型</td></tr>
+        <tr><td>🗣️ 社會學習</td><td>情報與合作，解鎖掠奪/防禦</td><td>社交型</td></tr>
+        <tr><td>🌿 環境知識</td><td>抵抗負面事件，穩定發展</td><td>防守型</td></tr>
+    </tbody>
+</table>
+
+<!-- 理論背景 -->
+<h2>理論背景</h2>
+
+<div class="card theory">
+    <p>本遊戲改編自 Joseph Henrich《<strong>The Secret of Our Success</strong>》(中譯：人類成功的秘密) 一書，核心概念包括：</p>
+    <ul>
+        <li><strong>昂貴組織權衡假說</strong>：大腦、消化系統、肌肉都需要能量，三者之間必須取捨——這正是遊戲中的投資機制</li>
+        <li><strong>累積文化演化</strong>：人類獨特的持續進步能力，知識代代累積如棘輪般不可逆轉</li>
+        <li><strong>基因-文化共演化</strong>：文化改變選擇壓力，進而影響基因演化（如火的使用→消化器官縮小→大腦增大）</li>
+    </ul>
+</div>
+
+<div class="card theory">
+    <h3>技術樹與演化時間線</h3>
+    <p>遊戲中的技術卡順序對應了真實的人類演化歷程：</p>
+    <ul>
+        <li>🪨 <strong>石器</strong>（260萬年前）：奧杜威石器是已知最早的人造工具</li>
+        <li>🔥 <strong>火的控制</strong>（150萬年前）：直立人開始使用火，開啟外部消化路線</li>
+        <li>🧠 <strong>認知革命</strong>（50-30萬年前）：語言、烹飪、長矛狩獵等技術井噴</li>
+        <li>🎨 <strong>行為現代性</strong>（30-10萬年前）：族群認同、民俗生物學等社會性技術</li>
+        <li>🚀 <strong>累積文化</strong>（1萬年前至今）：農業、文字、科學——知識指數級增長</li>
+    </ul>
+</div>
+
+<h2>📚 延伸閱讀</h2>
+<p>想深入了解遊戲背後的科學理論，推薦閱讀以下兩本著作：</p>
+
+<div class="card theory" style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:220px;">
+        <p><strong>The Secret of Our Success</strong></p>
+        <p style="color:var(--text-secondary);font-size:0.85rem;">Joseph Henrich (2016) — 本遊戲的設計原典。解釋人類為何成為唯一的文化物種，以及累積文化演化如何重塑我們的身體與大腦。</p>
+        <a href="https://www.kobo.com/tw/zh/ebook/the-secret-of-our-success?srsltid=AfmBOoodCXcazqdKP2UIJLy4CI4t3pp3mqdhVe8jf6irUbenfQ-jLHwv"
+           target="_blank"
+           style="display:inline-block;background:var(--accent);color:white;text-decoration:none;padding:6px 16px;border-radius:8px;font-size:0.82rem;margin-top:8px;">
+            🛒 Kobo 電子書購買
+        </a>
+    </div>
+</div>
+
+<div class="card theory" style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-top:12px;">
+    <div style="flex:1;min-width:220px;">
+        <p><strong>The WEIRDest People in the World</strong></p>
+        <p style="color:var(--text-secondary);font-size:0.85rem;">Joseph Henrich (2020) — 延伸問題：跨越文化演化門檻後，為何是西方社會率先發展出工業革命？天主教婚家計畫如何催生 WEIRD 心理特徵。</p>
+        <a href="https://www.kobo.com/tw/zh/ebook/ynlx5hAJBjmEWaLpf8Wf6Q?sId=a0724536-9ca8-475f-951d-11da7e0a7987&ssId=PLjFds6qPtdZflX6fqk80&cPos=1"
+           target="_blank"
+           style="display:inline-block;background:var(--accent);color:white;text-decoration:none;padding:6px 16px;border-radius:8px;font-size:0.82rem;margin-top:8px;">
+            🛒 Kobo 電子書購買
+        </a>
+    </div>
+</div>
+
+<footer>
+    <p>文化演化賽局 | 基於《The Secret of Our Success》by Joseph Henrich</p>
+    <p>Version Phase 4 | 2026</p>
+</footer>
+
+</body>
+</html>

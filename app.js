@@ -59,7 +59,18 @@ const TECH_PATHS = {
     }
 };
 
-// === 技術卡資料 (AP 成本制) ===
+// === 演化時代定義 ===
+const EVO_ERAS = {
+    1: { name: '舊石器時代早期', period: '260-150萬年前', icon: '🦴' },
+    2: { name: '舊石器時代中期', period: '150-50萬年前', icon: '🔥' },
+    3: { name: '認知革命', period: '50-30萬年前', icon: '🧠' },
+    4: { name: '行為現代性', period: '30-10萬年前', icon: '🎨' },
+    5: { name: '舊石器晚期', period: '10-5萬年前', icon: '⚒️' },
+    6: { name: '文明曙光', period: '5萬-1萬年前', icon: '🏛️' },
+    7: { name: '新石器革命', period: '1萬年前至今', icon: '🚀' }
+};
+
+// === 技術卡資料 (AP 成本制 + 演化時序) ===
 const TECH_CARDS = {
     // ===== 路徑 A：外部消化路線 =====
     fire_control: {
@@ -69,6 +80,9 @@ const TECH_CARDS = {
         tier: 1,
         cost: 3,
         ccsValue: 1,
+        evoEra: 2,           // 150萬年前 - 直立人用火
+        evoYear: 1500000,
+        evoRequires: ['stone_tools'], // 跨路徑演化前置：需先有石器才能控制火
         icon: '🔥',
         effects: {
             digestionReduction: 0.20,  // 消化成本 -20%
@@ -87,6 +101,8 @@ const TECH_CARDS = {
         tier: 2,
         cost: 5,
         ccsValue: 2,
+        evoEra: 3,           // 50萬年前 - 系統性烹飪
+        evoYear: 500000,
         requires: ['fire_control'],
         icon: '🍖',
         effects: {
@@ -103,6 +119,8 @@ const TECH_CARDS = {
         tier: 3,
         cost: 8,
         ccsValue: 3,
+        evoEra: 6,           // 5萬年前 - 醃製風乾技術
+        evoYear: 50000,
         requires: ['cooking'],
         icon: '🧂',
         effects: {
@@ -120,6 +138,8 @@ const TECH_CARDS = {
         tier: 4,
         cost: 12,
         ccsValue: 5,
+        evoEra: 6,           // 5萬年前 - 建築與器具
+        evoYear: 40000,
         requires: ['food_preservation', 'complex_tools'], // 需要兩條路徑匯聚（全部）
         // requiresAny 移除，預設為 requiresAll
         icon: '🏛️',
@@ -139,6 +159,8 @@ const TECH_CARDS = {
         tier: 1,
         cost: 3,
         ccsValue: 1,
+        evoEra: 1,           // 260萬年前 - 奧杜威石器（最早的技術）
+        evoYear: 2600000,
         icon: '🪨',
         effects: {
             freeMuscleInvestment: 1    // 每回合免費 +1 肌肉投資點
@@ -153,6 +175,8 @@ const TECH_CARDS = {
         tier: 2,
         cost: 5,
         ccsValue: 2,
+        evoEra: 3,           // 50萬年前 - Schöningen 長矛
+        evoYear: 500000,
         requires: ['stone_tools'],
         icon: '🏹',
         effects: {
@@ -169,6 +193,8 @@ const TECH_CARDS = {
         tier: 3,
         cost: 8,
         ccsValue: 3,
+        evoEra: 5,           // 10萬年前 - 複合工具
+        evoYear: 100000,
         requires: ['spear_hunting'],
         icon: '⚒️',
         effects: {
@@ -186,6 +212,8 @@ const TECH_CARDS = {
         tier: 1,
         cost: 2,
         ccsValue: 1,
+        evoEra: 3,           // 50-30萬年前 - 原語言能力
+        evoYear: 300000,
         icon: '💬',
         effects: {
             canViewInvestment: 1       // 可查看 1 位玩家的投資分配
@@ -200,6 +228,8 @@ const TECH_CARDS = {
         tier: 2,
         cost: 3,
         ccsValue: 2,
+        evoEra: 4,           // 30萬年前 - 部落認同
+        evoYear: 300000,
         requires: ['language'],
         icon: '🏳️',
         effects: {
@@ -216,6 +246,8 @@ const TECH_CARDS = {
         tier: 3,
         cost: 5,
         ccsValue: 3,
+        evoEra: 5,           // 10萬年前 - 口述歷史
+        evoYear: 100000,
         requires: ['group_identity'],
         icon: '📖',
         effects: {
@@ -231,6 +263,8 @@ const TECH_CARDS = {
         tier: 3, // 與 oral_tradition 同層，但從 group_identity 分支
         cost: 5,
         ccsValue: 3,
+        evoEra: 5,           // 10萬年前 - 社會制度
+        evoYear: 100000,
         requires: ['group_identity'],
         icon: '⚖️',
         effects: {
@@ -247,6 +281,8 @@ const TECH_CARDS = {
         tier: 4,
         cost: 12,
         ccsValue: 5,
+        evoEra: 6,           // 5萬年前 - 有意識的教學
+        evoYear: 50000,
         requires: ['oral_tradition'],
         icon: '🎓',
         effects: {
@@ -264,6 +300,8 @@ const TECH_CARDS = {
         tier: 1,
         cost: 2,
         ccsValue: 1,
+        evoEra: 2,           // 150萬年前 - 早期採集知識
+        evoYear: 1000000,
         icon: '🌱',
         effects: {
             gutsBonus: 0.20            // 消化投資報酬 +20%
@@ -278,6 +316,8 @@ const TECH_CARDS = {
         tier: 2,
         cost: 3,
         ccsValue: 2,
+        evoEra: 4,           // 30萬年前 - 系統性觀察
+        evoYear: 200000,
         requires: ['gathering_knowledge'],
         icon: '🦋',
         effects: {
@@ -298,6 +338,8 @@ const TECH_CARDS = {
         tier: 3,
         cost: 5,
         ccsValue: 3,
+        evoEra: 5,           // 10萬年前 - 多環境適應
+        evoYear: 70000,
         requires: ['folk_biology'],
         icon: '🏔️',
         effects: {
@@ -313,6 +355,8 @@ const TECH_CARDS = {
         tier: 4,
         cost: 12,
         ccsValue: 5,
+        evoEra: 7,           // 1萬年前 - 文字與記錄
+        evoYear: 10000,
         requires: ['environmental_adaptation'],
         icon: '📚',
         effects: {
@@ -329,6 +373,8 @@ const TECH_CARDS = {
         tier: 5,
         cost: 15,
         ccsValue: 10,
+        evoEra: 7,           // 1萬年前至今 - 累積文化的棘輪效應
+        evoYear: 5000,
         requiresTier4Count: 2, // 需任兩個 T4 技術
         icon: '🚀',
         effects: {
@@ -396,7 +442,64 @@ function initSetup() {
     countSelect.addEventListener('change', renderNameInputs);
     renderNameInputs();
 
+    // 渲染演化時代瀏覽列表
+    renderEvoEraBrowser();
+
     document.getElementById('start-btn').addEventListener('click', startGame);
+}
+
+// 首頁演化時代瀏覽器
+function renderEvoEraBrowser() {
+    const container = document.getElementById('evo-era-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // 按 evoEra 分組技術卡
+    const eraTechs = {};
+    for (const [techId, tech] of Object.entries(TECH_CARDS)) {
+        const era = tech.evoEra;
+        if (!era) continue;
+        if (!eraTechs[era]) eraTechs[era] = [];
+        eraTechs[era].push(tech);
+    }
+
+    // 按 era 編號排序顯示
+    const sortedEras = Object.keys(EVO_ERAS).sort((a, b) => Number(a) - Number(b));
+
+    sortedEras.forEach(eraKey => {
+        const era = EVO_ERAS[eraKey];
+        const techs = eraTechs[eraKey] || [];
+        if (techs.length === 0) return;
+
+        // 按 evoYear 降序排列（年代越久越前）
+        techs.sort((a, b) => (b.evoYear || 0) - (a.evoYear || 0));
+
+        const card = document.createElement('div');
+        card.className = 'evo-era-card';
+        card.innerHTML = `
+            <div class="evo-era-header">
+                <span class="evo-era-icon">${era.icon}</span>
+                <div class="evo-era-info">
+                    <div class="evo-era-name">${era.name}</div>
+                    <div class="evo-era-period">${era.period}</div>
+                </div>
+                <span class="evo-era-arrow">▶</span>
+            </div>
+            <div class="evo-era-techs">
+                ${techs.map(t => {
+                    const pathInfo = TECH_PATHS[t.path];
+                    const pathIcon = pathInfo ? pathInfo.icon : '';
+                    return `<span class="evo-era-tech-chip">${t.icon} ${t.name} <span class="chip-path">${pathIcon}</span></span>`;
+                }).join('')}
+            </div>
+        `;
+
+        card.querySelector('.evo-era-header').addEventListener('click', () => {
+            card.classList.toggle('active');
+        });
+
+        container.appendChild(card);
+    });
 }
 
 function startGame() {
@@ -763,15 +866,38 @@ const TechTreeManager = {
 
         if (tech.requires) {
             if (tech.requiresAny) {
-                return tech.requires.some(reqId => this.hasTech(player, reqId));
+                if (!tech.requires.some(reqId => this.hasTech(player, reqId))) return false;
             } else {
-                return tech.requires.every(reqId => this.hasTech(player, reqId));
+                if (!tech.requires.every(reqId => this.hasTech(player, reqId))) return false;
             }
+        }
+
+        // 檢查跨路徑演化前置條件 (evoRequires，個別技術指定)
+        if (tech.evoRequires) {
+            if (!tech.evoRequires.every(reqId => this.hasTech(player, reqId))) return false;
+        }
+
+        // 檢查演化時代順序：解鎖 era N 的技術需至少擁有一個 era N-1 的技術
+        if (tech.evoEra && tech.evoEra > 1) {
+            const prevEra = tech.evoEra - 1;
+            const allUnlocked = [
+                ...player.unlockedTechs,
+                ...(tempState.unlockedThisTurn || [])
+            ];
+            const hasPrevEraTech = allUnlocked.some(id => {
+                const t = TECH_CARDS[id];
+                return t && t.evoEra === prevEra;
+            });
+            if (!hasPrevEraTech) return false;
         }
 
         // 檢查 Tier 4 技術數量需求 (Tier 5)
         if (tech.requiresTier4Count) {
-            const t4Count = player.unlockedTechs.filter(id => {
+            const allUnlocked = [
+                ...player.unlockedTechs,
+                ...(tempState.unlockedThisTurn || [])
+            ];
+            const t4Count = allUnlocked.filter(id => {
                 const t = TECH_CARDS[id];
                 return t && t.tier === 4;
             }).length;
@@ -1072,9 +1198,13 @@ const TechTreeUI = {
             nodeEl.classList.add('locked');
         }
 
+        const eraInfo = EVO_ERAS[tech.evoEra];
+        const eraLabel = eraInfo ? `<div class="tech-node-era">${eraInfo.icon} ${eraInfo.period}</div>` : '';
+
         nodeEl.innerHTML = `
             <div class="tech-node-icon">${tech.icon}</div>
             <div class="tech-node-name">${tech.name}</div>
+            ${eraLabel}
             ${!isUnlocked ? `<div class="tech-node-cost">${tech.cost} AP</div>` : ''}
         `;
 
@@ -1100,7 +1230,9 @@ const TechTreeUI = {
         // 填入資料
         document.getElementById('modal-tech-icon').textContent = tech.icon;
         document.getElementById('modal-tech-name').textContent = tech.name;
-        document.getElementById('modal-tech-path').textContent = path ? path.name : '';
+        const eraInfo = EVO_ERAS[tech.evoEra];
+        const eraText = eraInfo ? ` | ${eraInfo.icon} ${eraInfo.name} (${eraInfo.period})` : '';
+        document.getElementById('modal-tech-path').innerHTML = `${path ? path.name : ''}${eraText}`;
         document.getElementById('modal-tech-desc').textContent = tech.description;
         document.getElementById('modal-tech-flavor').textContent = tech.flavorText;
         document.getElementById('modal-tech-cost').textContent = `${tech.cost} AP`;
@@ -1132,12 +1264,13 @@ const TechTreeUI = {
         // 渲染前置需求
         const reqEl = document.getElementById('modal-tech-requirements');
 
+        let reqHTML = '';
         if (tech.requiresTier4Count) {
             const currentT4 = player.unlockedTechs.filter(id => TECH_CARDS[id] && TECH_CARDS[id].tier === 4).length;
             const isMet = currentT4 >= tech.requiresTier4Count;
             const icon = isMet ? '✓' : '✗';
             const className = isMet ? 'req-met' : 'req-missing';
-            reqEl.innerHTML = `<span class="${className}">${icon} 需要任 ${tech.requiresTier4Count} 個 Tier 4 技術 (目前: ${currentT4})</span>`;
+            reqHTML += `<span class="${className}">${icon} 需要任 ${tech.requiresTier4Count} 個 Tier 4 技術 (目前: ${currentT4})</span>`;
         } else if (tech.requires && tech.requires.length > 0) {
             const reqTexts = tech.requires.map(reqId => {
                 const reqTech = TECH_CARDS[reqId];
@@ -1147,10 +1280,36 @@ const TechTreeUI = {
                 return `<span class="${className}">${icon} ${reqTech ? reqTech.name : reqId}</span>`;
             });
             const reqType = tech.requiresAny ? '(任一)' : '(全部)';
-            reqEl.innerHTML = `需要: ${reqTexts.join(' ')} ${reqType}`;
-        } else {
-            reqEl.innerHTML = '無前置需求';
+            reqHTML += `需要: ${reqTexts.join(' ')} ${reqType}`;
         }
+        // 顯示跨路徑演化前置條件（個別指定）
+        if (tech.evoRequires && tech.evoRequires.length > 0) {
+            const evoReqTexts = tech.evoRequires.map(reqId => {
+                const reqTech = TECH_CARDS[reqId];
+                const hasTech = TechTreeManager.hasTech(player, reqId);
+                const className = hasTech ? 'req-met' : 'req-missing';
+                const icon = hasTech ? '✓' : '✗';
+                return `<span class="${className}">${icon} ${reqTech ? reqTech.name : reqId}</span>`;
+            });
+            reqHTML += `${reqHTML ? '<br>' : ''}演化前置: ${evoReqTexts.join(' ')}`;
+        }
+        // 顯示演化時代順序限制
+        if (tech.evoEra && tech.evoEra > 1) {
+            const prevEra = tech.evoEra - 1;
+            const prevEraInfo = EVO_ERAS[prevEra];
+            const allUnlocked = [
+                ...player.unlockedTechs,
+                ...(tempState.unlockedThisTurn || [])
+            ];
+            const hasPrevEraTech = allUnlocked.some(id => {
+                const t = TECH_CARDS[id];
+                return t && t.evoEra === prevEra;
+            });
+            const className = hasPrevEraTech ? 'req-met' : 'req-missing';
+            const icon = hasPrevEraTech ? '✓' : '✗';
+            reqHTML += `${reqHTML ? '<br>' : ''}<span class="${className}">${icon} 需先掌握「${prevEraInfo.icon} ${prevEraInfo.name}」時代的技術</span>`;
+        }
+        reqEl.innerHTML = reqHTML || '無前置需求';
 
         // 更新按鈕狀態
         const unlockBtn = document.getElementById('modal-unlock-btn');

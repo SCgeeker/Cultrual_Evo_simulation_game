@@ -795,6 +795,15 @@ header h1 {
     color: var(--text);
 }
 
+.tech-node-era {
+    font-size: 0.6rem;
+    color: #aaa;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .tech-node-cost {
     font-size: 0.7rem;
     color: var(--muscle-color);
@@ -1015,4 +1024,101 @@ header h1 {
 
 .ap-display.deducting {
     animation: apDeduct 0.3s ease-out;
+}
+
+/* 演化時代瀏覽器 */
+.evo-browser {
+    margin: 20px 0 16px;
+}
+
+.evo-browser-title {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.evo-era-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.evo-era-card {
+    background: var(--bg-card);
+    border-radius: 10px;
+    overflow: hidden;
+    border-left: 3px solid var(--accent);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.evo-era-card:hover,
+.evo-era-card.active {
+    border-left-color: var(--muscle-color);
+}
+
+.evo-era-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+}
+
+.evo-era-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.evo-era-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.evo-era-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.evo-era-period {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.evo-era-arrow {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    transition: transform 0.2s;
+}
+
+.evo-era-card.active .evo-era-arrow {
+    transform: rotate(90deg);
+}
+
+.evo-era-techs {
+    display: none;
+    padding: 0 12px 10px;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.evo-era-card.active .evo-era-techs {
+    display: flex;
+}
+
+.evo-era-tech-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+}
+
+.evo-era-tech-chip .chip-path {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
 }
