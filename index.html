@@ -161,11 +161,20 @@
                                 <p class="effect">獲得 +1 能量</p>
                             </div>
 
+                            <div class="action-card locked" id="btn-enhanced-hunt">
+                                <div class="icon">🏹✨</div>
+                                <h3>強化狩獵</h3>
+                                <p>消耗 1 AP</p>
+                                <p class="effect">獲得 +2 能量</p>
+                                <p class="desc-text">(需解鎖 [長矛狩獵])</p>
+                            </div>
+
                             <div class="action-card" id="btn-defend">
                                 <div class="icon">🛡️</div>
                                 <h3>防禦</h3>
                                 <p>消耗 1 AP</p>
                                 <p class="effect">抵消 1 次掠奪</p>
+                                <p class="desc-text">(需解鎖 [族群認同])</p>
                             </div>
 
                             <div class="action-card disabled" id="group-plunder">
@@ -173,6 +182,7 @@
                                 <h3>掠奪</h3>
                                 <p>消耗 1 AP</p>
                                 <p class="effect">搶奪對手 2 能量</p>
+                                <p class="desc-text">(需解鎖 [族群認同])</p>
                                 <div id="plunder-targets" class="target-list">
                                     <!-- 動態生成對手按鈕 -->
                                 </div>
@@ -182,8 +192,8 @@
                                 <div class="icon">🤝</div>
                                 <h3>結盟</h3>
                                 <p>消耗 1 AP</p>
-                                <p class="effect">目標 +1 能量，取消雙方掠奪</p>
-                                <p class="desc-text">(需解鎖 [族群認同])</p>
+                                <p class="effect">建立持久結盟，目標 +1 能量</p>
+                                <p class="desc-text">(需解鎖 [族群認同]，盟友永久封鎖掠奪)</p>
                                 <div id="alliance-targets" class="target-list">
                                     <!-- 動態生成對手按鈕 -->
                                 </div>
@@ -191,10 +201,10 @@
 
                             <div class="action-card locked" id="group-punish">
                                 <div class="icon">⚖️</div>
-                                <h3>懲罰</h3>
+                                <h3>懲罰（解盟）</h3>
                                 <p>消耗 1 AP</p>
-                                <p class="effect">目標失去 1 能量</p>
-                                <p class="desc-text">(需解鎖 [社會規範])</p>
+                                <p class="effect">解除結盟，目標 -1 能量</p>
+                                <p class="desc-text">(需解鎖 [社會規範]，只能對盟友執行)</p>
                                 <div id="punish-targets" class="target-list">
                                     <!-- 動態生成對手按鈕 -->
                                 </div>

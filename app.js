@@ -43,10 +43,10 @@ const TECH_PATHS = {
         name: '社會學習路線',
         icon: '🗣️',
         description: '發展語言與社會組織，解鎖合作與競爭行動',
-        techs: ['language', 'group_identity', 'oral_tradition', 'teaching_system', 'cumulative_culture'],
+        techs: ['language', 'group_identity', 'oral_tradition', 'teaching_system'],
         branches: {
-            // 從 group_identity 分支出的額外路徑
-            norms: { after: 'group_identity', techs: ['social_norms'] }
+            // SOS CH 9-11：社會規範從口語傳承分支（需先建立口語傳承）
+            norms: { after: 'oral_tradition', techs: ['social_norms'] }
         }
     },
     // 路徑 D：環境知識路線 🌿
@@ -55,7 +55,7 @@ const TECH_PATHS = {
         name: '環境知識路線',
         icon: '🌿',
         description: '累積環境知識，提升採集效率與適應能力',
-        techs: ['gathering_knowledge', 'folk_biology', 'environmental_adaptation', 'information_resources', 'cumulative_culture']
+        techs: ['gathering_knowledge', 'folk_biology', 'environmental_adaptation', 'information_resources']
     }
 };
 
@@ -214,12 +214,13 @@ const TECH_CARDS = {
         ccsValue: 1,
         evoEra: 3,           // 50-30萬年前 - 原語言能力
         evoYear: 300000,
+        evoRequires: ['stone_tools'], // SOS CH 3-5：工具模仿文化先於語言演化
         icon: '💬',
         effects: {
             canViewInvestment: 1       // 可查看 1 位玩家的投資分配
         },
-        description: '符號與聲音的組合，開啟資訊傳遞的新紀元',
-        flavorText: '語言讓我們能夠分享不在眼前的事物——過去、未來、想像。'
+        description: '語言不是文化的起點，而是工具文化累積後大腦擴增的產物。需先有石器模仿傳統（Tier 1）與火或採集知識（Era 2），才具備演化語言的認知基礎。',
+        flavorText: '《我們成功的秘密》CH 3-5：早期人類靠「模仿」傳遞工具技術，語言是後來才演化出來的加速器，而非起點。'
     },
     group_identity: {
         id: 'group_identity',
@@ -260,12 +261,12 @@ const TECH_CARDS = {
         id: 'social_norms',
         name: '社會規範',
         path: 'social',
-        tier: 3, // 與 oral_tradition 同層，但從 group_identity 分支
-        cost: 5,
-        ccsValue: 3,
+        tier: 4, // SOS CH 9-11：社會規範出現在口語傳承建立之後
+        cost: 8,
+        ccsValue: 5,
         evoEra: 5,           // 10萬年前 - 社會制度
         evoYear: 100000,
-        requires: ['group_identity'],
+        requires: ['oral_tradition'],
         icon: '⚖️',
         effects: {
             canPunish: true            // 可懲罰違規者
@@ -1145,6 +1146,18 @@ const TechTreeUI = {
             const pathEl = this.createPathElement(player, pathId, path);
             container.appendChild(pathEl);
         }
+
+        // 渲染跨路線收斂節點（SOS CH 12 集體大腦）
+        const convergenceEl = document.createElement('div');
+        convergenceEl.className = 'tech-convergence';
+        convergenceEl.innerHTML = `
+            <div class="convergence-label">🏆 跨路線終極門檻（需任意 2 個 T4 技術）</div>
+            <div class="convergence-nodes"></div>
+        `;
+        const convNodes = convergenceEl.querySelector('.convergence-nodes');
+        const convNode = this.createTechNode(player, TECH_CARDS['cumulative_culture']);
+        convNodes.appendChild(convNode);
+        container.appendChild(convergenceEl);
     },
 
     // 建立單條路徑元素
@@ -1177,6 +1190,22 @@ const TechTreeUI = {
                 nodesContainer.appendChild(nodeEl);
             }
         });
+
+        // 渲染分支節點（排列於主路線下方）
+        if (path.branches) {
+            for (const branchKey in path.branches) {
+                const branch = path.branches[branchKey];
+                const branchRow = document.createElement('div');
+                branchRow.className = 'branch-row';
+                branch.techs.forEach(branchTechId => {
+                    const branchTech = TECH_CARDS[branchTechId];
+                    if (branchTech) {
+                        branchRow.appendChild(this.createTechNode(player, branchTech));
+                    }
+                });
+                pathEl.appendChild(branchRow);
+            }
+        }
 
         return pathEl;
     },
@@ -1483,7 +1512,8 @@ let tempState = {
         defend: 0,
         alliance: 0,
         punish: 0,
-        explore: 0
+        explore: 0,
+        enhanced_hunt: 0
     }
 };
 
@@ -1502,6 +1532,7 @@ function initActionPhase(player) {
 
     // 綁定基本行動按鈕
     document.getElementById('btn-hunt').onclick = () => performAction('hunt');
+    document.getElementById('btn-enhanced-hunt').onclick = () => performAction('enhanced_hunt');
     document.getElementById('btn-defend').onclick = () => performAction('defend');
     document.getElementById('btn-explore').onclick = () => performAction('explore');
 
@@ -1624,7 +1655,8 @@ function resetTempState(player) {
         defend: 0,
         alliance: 0,
         punish: 0,
-        explore: 0
+        explore: 0,
+        enhanced_hunt: 0
     };
     updateActionUI();
     TechTreeUI.renderTechTree(player);
@@ -1680,6 +1712,7 @@ function updateActionUI() {
     };
 
     updateBadge('btn-hunt', tempState.counts.hunt);
+    updateBadge('btn-enhanced-hunt', tempState.counts.enhanced_hunt);
     updateBadge('btn-defend', tempState.counts.defend);
     updateBadge('btn-farm', tempState.counts.farm);
     updateBadge('btn-explore', tempState.counts.explore);
@@ -1700,11 +1733,16 @@ function updateActionUI() {
     const canExplore = TechTreeManager.hasAction(player, 'explore');
     const hasSpear = TechTreeManager.hasTech(player, 'spear_hunting');
 
-    // 1. 狩獵（基礎行動，矛術解鎖後顯示強化效益）
+    // 1. 狩獵（基礎行動，固定 +1 能量）
     if (hasAP) btnHunt.classList.remove('disabled');
     else btnHunt.classList.add('disabled');
-    const huntEffect = btnHunt.querySelector('.effect');
-    if (huntEffect) huntEffect.textContent = hasSpear ? '獲得 +2 能量 ⚡（矛術強化）' : '獲得 +1 能量';
+
+    // 1b. 強化狩獵（需解鎖長矛狩獵）
+    const btnEnhanced = document.getElementById('btn-enhanced-hunt');
+    if (btnEnhanced) {
+        btnEnhanced.classList.toggle('locked', !hasSpear);
+        btnEnhanced.classList.toggle('disabled', !hasAP || !hasSpear);
+    }
 
     // 2. 防禦 (需解鎖族群認同)
     const defLocked = !canDefend;
@@ -1747,7 +1785,7 @@ function updateActionUI() {
         btnExplore.classList.toggle('disabled', !hasAP || !canExplore);
     }
 
-    // 渲染掠奪目標
+    // 渲染掠奪目標（盟友不可掠奪）
     const targetList = document.getElementById('plunder-targets');
     targetList.innerHTML = '';
 
@@ -1756,12 +1794,13 @@ function updateActionUI() {
             const btn = document.createElement('button');
             btn.className = 'btn-target';
 
+            const isAlly = player.allies.includes(index);
             const count = tempState.plunderTargets.filter(t => t.targetIndex === index).length;
             const plunderMark = count > 0 ? ` <span style="color:red">-${count * 2}</span>` : '';
+            const allyMark = isAlly ? ` <span style="color:#4CAF50">🤝已結盟</span>` : '';
             const displayEnergy = (p.initialEnergy !== undefined) ? p.initialEnergy : p.energy;
 
-            btn.innerHTML = `${p.name} <span class="energy-badge">⚡${displayEnergy}</span>${plunderMark}`;
-            btn.onclick = () => performAction('plunder', index);
+            btn.innerHTML = `${p.name} <span class="energy-badge">⚡${displayEnergy}</span>${plunderMark}${allyMark}`;
 
             if (count > 0) {
                 btn.style.border = '2px solid #ff5252';
@@ -1770,7 +1809,14 @@ function updateActionUI() {
                 badge.style.cssText = 'background:#ff5252;color:white;border-radius:50%;padding:2px 6px;margin-left:5px;font-size:12px;';
                 btn.appendChild(badge);
             }
-            if (!hasAP) { btn.disabled = true; btn.style.opacity = 0.5; }
+
+            if (!hasAP || isAlly) {
+                btn.disabled = true;
+                btn.style.opacity = 0.5;
+                if (isAlly) btn.title = '已結盟，無法掠奪（需先懲罰解盟）';
+            } else {
+                btn.onclick = () => performAction('plunder', index);
+            }
             targetList.appendChild(btn);
         }
     });
@@ -1797,13 +1843,23 @@ function updateActionUI() {
         }
     }
 
-    // 渲染懲罰目標
+    // 渲染懲罰目標（只顯示盟友，懲罰＝解盟制裁）
     const punishList = document.getElementById('punish-targets');
     if (punishList) {
         punishList.innerHTML = '';
         if (canPunish) {
-            game.players.forEach((p, index) => {
-                if (index !== game.currentIndex) {
+            const allies = player.allies.filter(idx => idx !== game.currentIndex);
+            if (allies.length === 0) {
+                const hint = document.createElement('p');
+                hint.style.color = 'var(--text-muted)';
+                hint.style.fontSize = '0.85rem';
+                hint.style.margin = '8px 0';
+                hint.textContent = '（無盟友可懲罰）';
+                punishList.appendChild(hint);
+            } else {
+                allies.forEach(index => {
+                    const p = game.players[index];
+                    if (!p) return;
                     const btn = document.createElement('button');
                     btn.className = 'btn-target';
                     const count = tempState.punishTargets.filter(t => t.targetIndex === index).length;
@@ -1820,8 +1876,8 @@ function updateActionUI() {
                     }
                     if (!hasAP) { btn.disabled = true; btn.style.opacity = 0.5; }
                     punishList.appendChild(btn);
-                }
-            });
+                });
+            }
         }
     }
 }
@@ -1829,19 +1885,17 @@ function updateActionUI() {
 function performAction(type, targetIndex) {
     if (tempState.ap < 1) return;
 
-    // 檢查技術加成
-    // 再次確保 player 正確
     const player = game.players[game.currentIndex];
 
-    // 簡單的狩獵加成檢查
-    let huntBonus = 0;
-    if (type === 'hunt' && TechTreeManager.hasTech(player, 'spear_hunting')) {
-        huntBonus = 1;
-    }
-
     if (type === 'hunt') {
-        tempState.energyChange += (1 + huntBonus);
+        tempState.energyChange += 1; // 基礎狩獵固定 +1，與長矛狩獵無關
         tempState.counts.hunt++;
+        tempState.ap--;
+    } else if (type === 'enhanced_hunt') {
+        // 強化狩獵需解鎖長矛狩獵
+        if (!TechTreeManager.hasTech(player, 'spear_hunting')) return;
+        tempState.energyChange += 2;
+        tempState.counts.enhanced_hunt++;
         tempState.ap--;
     } else if (type === 'farm') {
         tempState.energyChange += 2;
@@ -1935,39 +1989,45 @@ function showResult() {
     document.getElementById('result-round').textContent = game.round;
     document.getElementById('game-phase').textContent = `第 ${game.round} 回合結算`;
 
-    // ─── 1. 結盟結算（先執行，影響後續掠奪過濾）───
-    // 每次結盟：目標下回合 +1 能量；同時過濾掉盟友之間的掠奪
-    const allianceSet = new Set(); // 儲存 "fromIdx-targetIdx" 對
-    game.pendingAlliances.forEach(a => {
-        const key = `${a.fromIndex}-${a.targetIndex}`;
-        if (!allianceSet.has(key)) {
-            allianceSet.add(key);
-            const target = game.players[a.targetIndex];
-            target.pendingEnergy += 1;       // 結盟禮物：目標下回合 +1 能量
-            target.roundLog.gained += 1;
-        }
-    });
-    // 過濾掉結盟雙方之間的掠奪（雙向皆保護）
-    game.pendingAttacks = game.pendingAttacks.filter(att => {
-        const blockedAtoT = game.pendingAlliances.some(a =>
-            a.fromIndex === att.attackerIndex && a.targetIndex === att.targetIndex
-        );
-        const blockedTtoA = game.pendingAlliances.some(a =>
-            a.fromIndex === att.targetIndex && a.targetIndex === att.attackerIndex
-        );
-        return !(blockedAtoT || blockedTtoA);
-    });
-    game.pendingAlliances = [];
-
-    // ─── 2. 懲罰結算 ───
+    // ─── 1. 懲罰結算（解盟制裁，SOS CH 9-11）───
+    // 懲罰＝解除盟友關係 + 目標 -1 能量
     game.pendingPunishments.forEach(p => {
+        const attacker = game.players[p.attackerIndex];
         const target = game.players[p.targetIndex];
+        // 移除雙方的 allies 關係
+        attacker.allies = attacker.allies.filter(idx => idx !== p.targetIndex);
+        target.allies = target.allies.filter(idx => idx !== p.attackerIndex);
+        // 目標下回合 -1 能量
         target.pendingEnergy -= p.amount;
         target.roundLog.lost += p.amount;
     });
     game.pendingPunishments = [];
 
-    // ─── 3. 掠奪結算（Delayed Resolution，確保所有防禦點已設定）───
+    // ─── 2. 結盟結算（持久跨回合）───
+    // 雙方互加 allies[]，目標下回合 +1 能量
+    const allianceSet = new Set();
+    game.pendingAlliances.forEach(a => {
+        const key = [a.fromIndex, a.targetIndex].sort().join('-');
+        if (!allianceSet.has(key)) {
+            allianceSet.add(key);
+            const from = game.players[a.fromIndex];
+            const target = game.players[a.targetIndex];
+            // 雙方互加 allies（去重）
+            if (!from.allies.includes(a.targetIndex)) from.allies.push(a.targetIndex);
+            if (!target.allies.includes(a.fromIndex)) target.allies.push(a.fromIndex);
+            // 結盟禮物：目標下回合 +1 能量
+            target.pendingEnergy += 1;
+            target.roundLog.gained += 1;
+        }
+    });
+    game.pendingAlliances = [];
+
+    // ─── 3. 過濾掠奪（基於持久 allies，包含本回合新結盟）───
+    game.pendingAttacks = game.pendingAttacks.filter(att =>
+        !game.players[att.attackerIndex].allies.includes(att.targetIndex)
+    );
+
+    // ─── 4. 掠奪結算（Delayed Resolution，確保所有防禦點已設定）───
     game.pendingAttacks.forEach(att => {
         const attacker = game.players[att.attackerIndex];
         const target = game.players[att.targetIndex];

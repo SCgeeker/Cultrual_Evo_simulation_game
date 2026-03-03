@@ -236,9 +236,12 @@
     </thead>
     <tbody>
         <tr><td><span class="emoji">🏹</span> 狩獵</td><td>1 行動點</td><td>+1 能量</td></tr>
-        <tr><td><span class="emoji">🛡️</span> 防禦</td><td>1 行動點</td><td>抵消 1 次掠奪（需 [族群認同]）</td></tr>
-        <tr><td><span class="emoji">🌾</span> 農耕</td><td>1 行動點</td><td>+2 能量（需 [食物保存]）</td></tr>
-        <tr><td><span class="emoji">⚔️</span> 掠奪</td><td>1 行動點</td><td>搶奪對手 2 能量（需 [族群認同]）</td></tr>
+        <tr><td><span class="emoji">🏹✨</span> 強化狩獵</td><td>1 行動點</td><td>+2 能量（需解鎖 [長矛狩獵]）</td></tr>
+        <tr><td><span class="emoji">🛡️</span> 防禦</td><td>1 行動點</td><td>抵消 1 次掠奪（需解鎖 [族群認同]）</td></tr>
+        <tr><td><span class="emoji">🌾</span> 農耕</td><td>1 行動點</td><td>+2 能量（需解鎖 [食物保存]）</td></tr>
+        <tr><td><span class="emoji">⚔️</span> 掠奪</td><td>1 行動點</td><td>搶奪對手 2 能量（需解鎖 [族群認同]，不可對盟友執行）</td></tr>
+        <tr><td><span class="emoji">🤝</span> 結盟</td><td>1 行動點</td><td>建立<strong>持久結盟</strong>，目標下回合 +1 能量，雙方永久封鎖互相掠奪（需解鎖 [族群認同]）</td></tr>
+        <tr><td><span class="emoji">⚖️</span> 懲罰（解盟）</td><td>1 行動點</td><td>解除與目標的結盟關係，目標 -1 能量；恢復掠奪資格（需解鎖 [社會規範]，只能對盟友執行）</td></tr>
     </tbody>
 </table>
 <p>同時可使用 AP（技術點）解鎖技術樹上的技術卡。</p>
@@ -261,9 +264,10 @@
     </thead>
     <tbody>
         <tr><td>🔥 外部消化</td><td>食物處理</td><td>火的控制 → 烹飪 → 食物保存</td></tr>
-        <tr><td>🪨 工具製作</td><td>物質技術</td><td>石器製作 → 長矛狩獵 → 複雜工具</td></tr>
-        <tr><td>🗣️ 社會學習</td><td>知識傳承</td><td>語言 → 族群認同 → 口語傳承</td></tr>
-        <tr><td>🌿 環境知識</td><td>生態智慧</td><td>採集知識 → 民俗生物學 → 環境適應</td></tr>
+        <tr><td>🪨 工具製作</td><td>物質技術</td><td>石器製作 → 長矛狩獵 → 複雜工具 → 人造物系統（T4）</td></tr>
+        <tr><td>🗣️ 社會學習</td><td>知識傳承</td><td>語言 → 族群認同 → 口語傳承 → 教學系統（T4）<br><small style="color:#aaa;">└ 分支：社會規範（T4，需口語傳承）</small></td></tr>
+        <tr><td>🌿 環境知識</td><td>生態智慧</td><td>採集知識 → 民俗生物學 → 環境適應 → 資訊資源（T4）</td></tr>
+        <tr style="background:rgba(255,215,0,0.07);"><td colspan="2">🏆 <strong>跨路線終極門檻</strong></td><td>累積文化（T5）：需任意 2 個 Tier 4 技術</td></tr>
     </tbody>
 </table>
 
@@ -287,11 +291,11 @@
     </div>
     <div class="evo-era">
         <div class="evo-era-title">⚒️ 舊石器晚期 (10-5萬年前)</div>
-        <div class="evo-era-techs">複雜工具、口語傳承、社會規範、環境適應</div>
+        <div class="evo-era-techs">複雜工具、口語傳承、環境適應</div>
     </div>
     <div class="evo-era">
         <div class="evo-era-title">🏛️ 文明曙光 (5萬-1萬年前)</div>
-        <div class="evo-era-techs">食物保存、人造物系統、教學系統</div>
+        <div class="evo-era-techs">食物保存、人造物系統、教學系統、社會規範（Tier 4，需口語傳承）</div>
     </div>
     <div class="evo-era">
         <div class="evo-era-title">🚀 新石器革命 (1萬年前至今)</div>
@@ -308,16 +312,18 @@
         <tr><td>Tier 1</td><td>2-3 AP</td><td>1</td></tr>
         <tr><td>Tier 2</td><td>3-5 AP</td><td>2</td></tr>
         <tr><td>Tier 3</td><td>5-8 AP</td><td>3</td></tr>
-        <tr><td>Tier 4</td><td>12 AP</td><td>5</td></tr>
+        <tr><td>Tier 4</td><td>8-12 AP</td><td>5</td></tr>
         <tr><td>Tier 5</td><td>15 AP</td><td>10</td></tr>
     </tbody>
 </table>
 
 <h3>特殊技術</h3>
 <div class="card">
+    <p><strong>🔥 火的控制</strong>（Tier 1）：跨路徑演化前置 — 需先解鎖「石器製作」（SOS：直立人 150 萬年前用火）</p>
+    <p><strong>🗣️ 語言 Lv.1</strong>（Tier 2）：跨路徑演化前置 — 需先解鎖「石器製作」＋「火的控制」或「採集知識」（SOS CH 3-5：工具模仿傳統是語言演化的認知基礎）</p>
     <p><strong>🏛️ 人造物系統</strong>（Tier 4）：需要「複雜工具」+「食物保存」兩條路徑匯聚</p>
-    <p><strong>🚀 累積文化</strong>（Tier 5）：需要任兩項 Tier 4 技術</p>
-    <p><strong>🔥 火的控制</strong>（Tier 1）：跨路徑演化前置 — 需先解鎖「石器製作」</p>
+    <p><strong>⚖️ 社會規範</strong>（Tier 4，8 AP）：社交路線分支，需先解鎖「口語傳承」（SOS CH 9-11：口語傳承建立後才出現系統性社會制裁）</p>
+    <p><strong>🏆 累積文化</strong>（Tier 5）：跨路線終極門檻，需任意 2 個 Tier 4 技術，不屬於單一路線</p>
 </div>
 
 <!-- 策略提示 -->
@@ -339,8 +345,8 @@
     </thead>
     <tbody>
         <tr><td>🔥 外部消化</td><td>穩定能量收入，長期優勢</td><td>穩健型</td></tr>
-        <tr><td>🪨 工具製作</td><td>行動點優勢，可強化狩獵</td><td>攻擊型</td></tr>
-        <tr><td>🗣️ 社會學習</td><td>情報與合作，解鎖掠奪/防禦</td><td>社交型</td></tr>
+        <tr><td>🪨 工具製作</td><td>行動點優勢，長矛狩獵解鎖「強化狩獵」（+2 能量）</td><td>攻擊型</td></tr>
+        <tr><td>🗣️ 社會學習</td><td>情報與合作，解鎖掠奪/防禦/結盟；Tier 4 社會規範可制裁背盟</td><td>社交型</td></tr>
         <tr><td>🌿 環境知識</td><td>抵抗負面事件，穩定發展</td><td>防守型</td></tr>
     </tbody>
 </table>
@@ -398,7 +404,7 @@
 
 <footer>
     <p>文化演化賽局 | 基於《The Secret of Our Success》by Joseph Henrich</p>
-    <p>Version Phase 4 | 2026</p>
+    <p>Version Phase 4.1 | 2026-03</p>
 </footer>
 
 </body>

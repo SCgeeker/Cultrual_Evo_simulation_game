@@ -1122,3 +1122,34 @@ header h1 {
     font-size: 0.65rem;
     color: var(--text-secondary);
 }
+
+/* ========== 跨路線收斂節點 ========== */
+.tech-convergence {
+    margin-top: 16px;
+    padding: 12px;
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    background: rgba(255, 215, 0, 0.05);
+}
+
+.convergence-label {
+    font-size: 0.9em;
+    color: #ffd700;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.convergence-nodes {
+    display: flex;
+    justify-content: center;
+}
+
+/* 技術路線分支行 */
+.branch-row {
+    display: flex;
+    gap: 8px;
+    border-left: 2px dashed #666;
+    padding-left: 8px;
+    margin-left: 4px;
+    margin-top: 8px;
+}
