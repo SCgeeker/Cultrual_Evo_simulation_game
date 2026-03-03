@@ -392,7 +392,9 @@ const game = {
     round: 1,
     maxRounds: 20,
     currentEvent: null,
-    pendingAttacks: [], // 新增：暫存本回合所有攻擊，於結算時統一處理
+    pendingAttacks: [],     // 暫存本回合所有掠奪，於結算時統一處理
+    pendingAlliances: [],   // 暫存本回合所有結盟
+    pendingPunishments: [], // 暫存本回合所有懲罰
     baseMultipliers: { brain: 1, guts: 1, muscle: 1 }
 };
 
@@ -509,7 +511,9 @@ function startGame() {
     BASE_ENERGY = parseInt(document.getElementById('base-energy').value) || 10;
     game.requireGuts = !!document.getElementById('require-guts').checked;
     game.players = [];
-    game.pendingAttacks = []; // 清空攻擊佇列
+    game.pendingAttacks = [];
+    game.pendingAlliances = [];
+    game.pendingPunishments = [];
 
     for (let i = 0; i < count; i++) {
         const name = document.getElementById(`name-${i}`).value || `部落 ${i + 1}`;
@@ -550,8 +554,10 @@ function startGame() {
 
 // === 回合開始：顯示事件 ===
 function startRound() {
-    // 回合開始時清空上一回合的攻擊佇列 (以防萬一)
+    // 回合開始時清空上一回合的佇列
     game.pendingAttacks = [];
+    game.pendingAlliances = [];
+    game.pendingPunishments = [];
 
     game.players.forEach(p => {
         // 重置防禦點
@@ -1250,13 +1256,23 @@ const TechTreeUI = {
             `;
         }
 
-        // 渲染解鎖行動
+        // 渲染解鎖行動（顯示中文名稱）
         if (tech.unlocksAction) {
+            const ACTION_NAMES = {
+                farming: '🌾 農耕（+2能量）',
+                enhanced_hunt: '🏹 強化狩獵（狩獵改為+2能量）',
+                plunder: '⚔️ 掠奪（搶奪對手2能量）',
+                defend: '🛡️ 防禦（抵消1次掠奪）',
+                alliance: '🤝 結盟（目標+1能量，取消雙方掠奪）',
+                punish: '⚖️ 懲罰（目標-1能量）',
+                explore: '🧭 探索（+2能量）'
+            };
             const actions = Array.isArray(tech.unlocksAction) ? tech.unlocksAction : [tech.unlocksAction];
+            const actionLabels = actions.map(a => ACTION_NAMES[a] || a).join('<br>');
             effectsEl.innerHTML += `
                 <div class="tech-effect-item">
                     <span class="effect-icon">🔓</span>
-                    <span>解鎖行動: <span class="effect-value">${actions.join(', ')}</span></span>
+                    <span>解鎖行動:<br><span class="effect-value">${actionLabels}</span></span>
                 </div>
             `;
         }
@@ -1459,10 +1475,15 @@ let tempState = {
     energyChange: 0,
     defenseToAdd: 0,
     plunderTargets: [],
+    allyTargets: [],    // 本回合結盟目標
+    punishTargets: [],  // 本回合懲罰目標
     counts: {
         hunt: 0,
         farm: 0,
-        defend: 0
+        defend: 0,
+        alliance: 0,
+        punish: 0,
+        explore: 0
     }
 };
 
@@ -1479,9 +1500,10 @@ function initActionPhase(player) {
 
     document.getElementById('action-player-name').textContent = player.name;
 
-    // 綁定按鈕
+    // 綁定基本行動按鈕
     document.getElementById('btn-hunt').onclick = () => performAction('hunt');
     document.getElementById('btn-defend').onclick = () => performAction('defend');
+    document.getElementById('btn-explore').onclick = () => performAction('explore');
 
     let btnFarm = document.getElementById('btn-farm');
     if (!btnFarm) {
@@ -1542,12 +1564,29 @@ function initActionPhase(player) {
         // 無論有無新解鎖，都重新計算 CCS 確保同步
         player.ccs = TechTreeManager.calculateCCS(player);
 
-        // 3. 處理攻擊請求
+        // 3. 處理掠奪請求
         tempState.plunderTargets.forEach(action => {
             game.pendingAttacks.push({
                 attackerIndex: game.currentIndex,
                 targetIndex: action.targetIndex,
                 amount: 2
+            });
+        });
+
+        // 4. 處理結盟請求（目標 +1 pendingEnergy，雙方掠奪取消於 showResult 處理）
+        tempState.allyTargets.forEach(action => {
+            game.pendingAlliances.push({
+                fromIndex: game.currentIndex,
+                targetIndex: action.targetIndex
+            });
+        });
+
+        // 5. 處理懲罰請求
+        tempState.punishTargets.forEach(action => {
+            game.pendingPunishments.push({
+                attackerIndex: game.currentIndex,
+                targetIndex: action.targetIndex,
+                amount: 1
             });
         });
 
@@ -1577,10 +1616,15 @@ function resetTempState(player) {
     tempState.energyChange = 0;
     tempState.defenseToAdd = 0;
     tempState.plunderTargets = [];
+    tempState.allyTargets = [];
+    tempState.punishTargets = [];
     tempState.counts = {
         hunt: 0,
         farm: 0,
-        defend: 0
+        defend: 0,
+        alliance: 0,
+        punish: 0,
+        explore: 0
     };
     updateActionUI();
     TechTreeUI.renderTechTree(player);
@@ -1638,37 +1682,69 @@ function updateActionUI() {
     updateBadge('btn-hunt', tempState.counts.hunt);
     updateBadge('btn-defend', tempState.counts.defend);
     updateBadge('btn-farm', tempState.counts.farm);
+    updateBadge('btn-explore', tempState.counts.explore);
 
     const btnHunt = document.getElementById('btn-hunt');
     const btnDefend = document.getElementById('btn-defend');
     const btnFarm = document.getElementById('btn-farm');
+    const btnExplore = document.getElementById('btn-explore');
     const groupPlunder = document.getElementById('group-plunder');
+    const groupAlliance = document.getElementById('group-alliance');
+    const groupPunish = document.getElementById('group-punish');
 
     const hasAP = tempState.ap > 0;
     const canDefend = TechTreeManager.hasAction(player, 'defend');
     const canPlunder = TechTreeManager.hasAction(player, 'plunder');
+    const canAlly = TechTreeManager.hasAction(player, 'alliance');
+    const canPunish = TechTreeManager.hasAction(player, 'punish');
+    const canExplore = TechTreeManager.hasAction(player, 'explore');
+    const hasSpear = TechTreeManager.hasTech(player, 'spear_hunting');
 
-    // 1. 基礎行動 (狩獵)
+    // 1. 狩獵（基礎行動，矛術解鎖後顯示強化效益）
     if (hasAP) btnHunt.classList.remove('disabled');
     else btnHunt.classList.add('disabled');
+    const huntEffect = btnHunt.querySelector('.effect');
+    if (huntEffect) huntEffect.textContent = hasSpear ? '獲得 +2 能量 ⚡（矛術強化）' : '獲得 +1 能量';
 
-    // 2. 防禦 (需解鎖)
+    // 2. 防禦 (需解鎖族群認同)
     const defLocked = !canDefend;
     btnDefend.classList.toggle('locked', defLocked);
     btnDefend.title = defLocked ? "需解鎖 [族群認同] 技術" : "";
     btnDefend.classList.toggle('disabled', !hasAP || defLocked);
 
-    // 3. 掠奪 (需解鎖)
+    // 3. 掠奪 (需解鎖族群認同)
     const pluLocked = !canPlunder;
     groupPlunder.classList.toggle('locked', pluLocked);
     groupPlunder.title = pluLocked ? "需解鎖 [族群認同] 技術" : "";
     groupPlunder.classList.toggle('disabled', !hasAP || pluLocked);
 
+    // 4. 農耕 (需解鎖食物保存)
     if (btnFarm) {
         const isFarmLocked = !TechTreeManager.hasAction(player, 'farming');
         btnFarm.classList.toggle('locked', isFarmLocked);
         btnFarm.title = isFarmLocked ? "需解鎖 [食物保存] 技術" : "";
         btnFarm.classList.toggle('disabled', !hasAP || isFarmLocked);
+    }
+
+    // 5. 結盟 (需解鎖族群認同)
+    if (groupAlliance) {
+        groupAlliance.classList.toggle('locked', !canAlly);
+        groupAlliance.title = !canAlly ? "需解鎖 [族群認同] 技術" : "";
+        groupAlliance.classList.toggle('disabled', !hasAP || !canAlly);
+    }
+
+    // 6. 懲罰 (需解鎖社會規範)
+    if (groupPunish) {
+        groupPunish.classList.toggle('locked', !canPunish);
+        groupPunish.title = !canPunish ? "需解鎖 [社會規範] 技術" : "";
+        groupPunish.classList.toggle('disabled', !hasAP || !canPunish);
+    }
+
+    // 7. 探索 (需解鎖民俗生物學)
+    if (btnExplore) {
+        btnExplore.classList.toggle('locked', !canExplore);
+        btnExplore.title = !canExplore ? "需解鎖 [民俗生物學] 技術" : "";
+        btnExplore.classList.toggle('disabled', !hasAP || !canExplore);
     }
 
     // 渲染掠奪目標
@@ -1680,38 +1756,74 @@ function updateActionUI() {
             const btn = document.createElement('button');
             btn.className = 'btn-target';
 
-            // 檢查次數
             const count = tempState.plunderTargets.filter(t => t.targetIndex === index).length;
             const plunderMark = count > 0 ? ` <span style="color:red">-${count * 2}</span>` : '';
-
-            // 使用 initialEnergy 顯示，以保持戰爭迷霧
             const displayEnergy = (p.initialEnergy !== undefined) ? p.initialEnergy : p.energy;
 
             btn.innerHTML = `${p.name} <span class="energy-badge">⚡${displayEnergy}</span>${plunderMark}`;
             btn.onclick = () => performAction('plunder', index);
 
-            // 增加 Badge 樣式給掠奪按鈕
             if (count > 0) {
                 btn.style.border = '2px solid #ff5252';
-                // 也可以加個 badge
                 const badge = document.createElement('span');
                 badge.textContent = count;
-                badge.style.background = '#ff5252';
-                badge.style.color = 'white';
-                badge.style.borderRadius = '50%';
-                badge.style.padding = '2px 6px';
-                badge.style.marginLeft = '5px';
-                badge.style.fontSize = '12px';
+                badge.style.cssText = 'background:#ff5252;color:white;border-radius:50%;padding:2px 6px;margin-left:5px;font-size:12px;';
                 btn.appendChild(badge);
             }
-
-            if (!hasAP) {
-                btn.disabled = true;
-                btn.style.opacity = 0.5;
-            }
+            if (!hasAP) { btn.disabled = true; btn.style.opacity = 0.5; }
             targetList.appendChild(btn);
         }
     });
+
+    // 渲染結盟目標
+    const allianceList = document.getElementById('alliance-targets');
+    if (allianceList) {
+        allianceList.innerHTML = '';
+        if (canAlly) {
+            game.players.forEach((p, index) => {
+                if (index !== game.currentIndex) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-target';
+                    const count = tempState.allyTargets.filter(t => t.targetIndex === index).length;
+                    const allyMark = count > 0 ? ` <span style="color:#4CAF50">✓結盟</span>` : '';
+                    const displayEnergy = (p.initialEnergy !== undefined) ? p.initialEnergy : p.energy;
+                    btn.innerHTML = `${p.name} <span class="energy-badge">⚡${displayEnergy}</span>${allyMark}`;
+                    btn.onclick = () => performAction('alliance', index);
+                    if (count > 0) btn.style.border = '2px solid #4CAF50';
+                    if (!hasAP) { btn.disabled = true; btn.style.opacity = 0.5; }
+                    allianceList.appendChild(btn);
+                }
+            });
+        }
+    }
+
+    // 渲染懲罰目標
+    const punishList = document.getElementById('punish-targets');
+    if (punishList) {
+        punishList.innerHTML = '';
+        if (canPunish) {
+            game.players.forEach((p, index) => {
+                if (index !== game.currentIndex) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-target';
+                    const count = tempState.punishTargets.filter(t => t.targetIndex === index).length;
+                    const punishMark = count > 0 ? ` <span style="color:#FF9800">×${count}</span>` : '';
+                    const displayEnergy = (p.initialEnergy !== undefined) ? p.initialEnergy : p.energy;
+                    btn.innerHTML = `${p.name} <span class="energy-badge">⚡${displayEnergy}</span>${punishMark}`;
+                    btn.onclick = () => performAction('punish', index);
+                    if (count > 0) {
+                        btn.style.border = '2px solid #FF9800';
+                        const badge = document.createElement('span');
+                        badge.textContent = count;
+                        badge.style.cssText = 'background:#FF9800;color:white;border-radius:50%;padding:2px 6px;margin-left:5px;font-size:12px;';
+                        btn.appendChild(badge);
+                    }
+                    if (!hasAP) { btn.disabled = true; btn.style.opacity = 0.5; }
+                    punishList.appendChild(btn);
+                }
+            });
+        }
+    }
 }
 
 function performAction(type, targetIndex) {
@@ -1741,7 +1853,22 @@ function performAction(type, targetIndex) {
         tempState.ap--;
     } else if (type === 'plunder') {
         tempState.plunderTargets.push({ targetIndex, amount: 2 });
-        // tempState.energyChange += 2; // 修正：不要在這裡立即獲得能量，因為可能會被防禦。統一在回合結束結算。
+        // 不立即獲得能量，於回合結束統一結算（可能被防禦阻擋）
+        tempState.ap--;
+    } else if (type === 'alliance') {
+        // 結盟：目標下回合 +1 能量，雙方取消互相掠奪（於結算時處理）
+        tempState.allyTargets.push({ targetIndex });
+        tempState.counts.alliance++;
+        tempState.ap--;
+    } else if (type === 'punish') {
+        // 懲罰：目標下回合 -1 能量（於結算時處理）
+        tempState.punishTargets.push({ targetIndex });
+        tempState.counts.punish++;
+        tempState.ap--;
+    } else if (type === 'explore') {
+        // 探索：利用環境知識獲得 +2 能量
+        tempState.energyChange += 2;
+        tempState.counts.explore++;
         tempState.ap--;
     }
 
@@ -1808,8 +1935,39 @@ function showResult() {
     document.getElementById('result-round').textContent = game.round;
     document.getElementById('game-phase').textContent = `第 ${game.round} 回合結算`;
 
-    // 修正：在此處統一解決所有攻擊 (Delayed Resolution)
-    // 這樣可以確保所有玩家都設定好 defensePoints
+    // ─── 1. 結盟結算（先執行，影響後續掠奪過濾）───
+    // 每次結盟：目標下回合 +1 能量；同時過濾掉盟友之間的掠奪
+    const allianceSet = new Set(); // 儲存 "fromIdx-targetIdx" 對
+    game.pendingAlliances.forEach(a => {
+        const key = `${a.fromIndex}-${a.targetIndex}`;
+        if (!allianceSet.has(key)) {
+            allianceSet.add(key);
+            const target = game.players[a.targetIndex];
+            target.pendingEnergy += 1;       // 結盟禮物：目標下回合 +1 能量
+            target.roundLog.gained += 1;
+        }
+    });
+    // 過濾掉結盟雙方之間的掠奪（雙向皆保護）
+    game.pendingAttacks = game.pendingAttacks.filter(att => {
+        const blockedAtoT = game.pendingAlliances.some(a =>
+            a.fromIndex === att.attackerIndex && a.targetIndex === att.targetIndex
+        );
+        const blockedTtoA = game.pendingAlliances.some(a =>
+            a.fromIndex === att.targetIndex && a.targetIndex === att.attackerIndex
+        );
+        return !(blockedAtoT || blockedTtoA);
+    });
+    game.pendingAlliances = [];
+
+    // ─── 2. 懲罰結算 ───
+    game.pendingPunishments.forEach(p => {
+        const target = game.players[p.targetIndex];
+        target.pendingEnergy -= p.amount;
+        target.roundLog.lost += p.amount;
+    });
+    game.pendingPunishments = [];
+
+    // ─── 3. 掠奪結算（Delayed Resolution，確保所有防禦點已設定）───
     game.pendingAttacks.forEach(att => {
         const attacker = game.players[att.attackerIndex];
         const target = game.players[att.targetIndex];
@@ -1817,18 +1975,15 @@ function showResult() {
         if (target.defensePoints > 0) {
             // 防禦成功
             target.defensePoints--;
-            // 攻擊者無獲益，目標無損失
-            // 紀錄顯示
-            // attacker.roundLog.gained += 0; 
         } else {
             // 攻擊成功
             // 攻擊者獲得 +2 (下回合生效 -> pendingEnergy)
             attacker.pendingEnergy += 2;
-            attacker.roundLog.gained += 2; // 更新日誌以顯示
+            attacker.roundLog.gained += 2;
 
             // 目標損失 -2 (下回合生效 -> pendingEnergy)
             target.pendingEnergy -= 2;
-            target.roundLog.lost += 2; // 更新日誌以顯示
+            target.roundLog.lost += 2;
         }
     });
     // 清空佇列，避免重複計算
@@ -1855,8 +2010,8 @@ function showResult() {
         // 生成行動階段的描述字串
         let actionStr = '';
         if (p.results.energy > 0) actionStr += `+${p.results.energy}(消化) `;
-        if (p.roundLog.gained > 0) actionStr += `<span style="color:#4CAF50">+${p.roundLog.gained}(行動)</span> `;
-        if (p.roundLog.lost > 0) actionStr += `<span style="color:#F44336">-${p.roundLog.lost}(被奪)</span> `;
+        if (p.roundLog.gained > 0) actionStr += `<span style="color:#4CAF50">+${p.roundLog.gained}(行動/結盟)</span> `;
+        if (p.roundLog.lost > 0) actionStr += `<span style="color:#F44336">-${p.roundLog.lost}(被奪/懲罰)</span> `;
         if (actionStr === '') actionStr = '+0';
 
         row.innerHTML = `
