@@ -1536,21 +1536,7 @@ function initActionPhase(player) {
     document.getElementById('btn-defend').onclick = () => performAction('defend');
     document.getElementById('btn-explore').onclick = () => performAction('explore');
 
-    let btnFarm = document.getElementById('btn-farm');
-    if (!btnFarm) {
-        const optionsDiv = document.querySelector('.action-options');
-        btnFarm = document.createElement('button');
-        btnFarm.id = 'btn-farm';
-        btnFarm.className = 'action-card';
-        btnFarm.innerHTML = `
-            <div class="action-icon">🌾</div>
-            <h3>農耕</h3>
-            <p>消耗 1 AP</p>
-            <p>獲得 2 能量</p>
-            <p class="desc-text">(需解鎖 [食物保存] 技術)</p>
-        `;
-        optionsDiv.insertBefore(btnFarm, document.getElementById('btn-defend'));
-    }
+    const btnFarm = document.getElementById('btn-farm');
 
     btnFarm.onclick = () => performAction('farm');
 

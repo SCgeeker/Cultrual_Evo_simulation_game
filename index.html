@@ -169,12 +169,20 @@
                                 <p class="desc-text">(需解鎖 [長矛狩獵])</p>
                             </div>
 
-                            <div class="action-card" id="btn-defend">
-                                <div class="icon">🛡️</div>
-                                <h3>防禦</h3>
+                            <div class="action-card locked" id="btn-farm">
+                                <div class="icon">🌾</div>
+                                <h3>農耕</h3>
                                 <p>消耗 1 AP</p>
-                                <p class="effect">抵消 1 次掠奪</p>
-                                <p class="desc-text">(需解鎖 [族群認同])</p>
+                                <p class="effect">獲得 +2 能量</p>
+                                <p class="desc-text">(需解鎖 [食物保存])</p>
+                            </div>
+
+                            <div class="action-card locked" id="btn-explore">
+                                <div class="icon">🧭</div>
+                                <h3>探索</h3>
+                                <p>消耗 1 AP</p>
+                                <p class="effect">獲得 +2 能量</p>
+                                <p class="desc-text">(需解鎖 [民俗生物學])</p>
                             </div>
 
                             <div class="action-card disabled" id="group-plunder">
@@ -182,10 +190,18 @@
                                 <h3>掠奪</h3>
                                 <p>消耗 1 AP</p>
                                 <p class="effect">搶奪對手 2 能量</p>
-                                <p class="desc-text">(需解鎖 [族群認同])</p>
+                                <p class="desc-text">(需解鎖 [族群認同]，不可對盟友執行)</p>
                                 <div id="plunder-targets" class="target-list">
                                     <!-- 動態生成對手按鈕 -->
                                 </div>
+                            </div>
+
+                            <div class="action-card" id="btn-defend">
+                                <div class="icon">🛡️</div>
+                                <h3>防禦</h3>
+                                <p>消耗 1 AP</p>
+                                <p class="effect">抵消 1 次掠奪</p>
+                                <p class="desc-text">(需解鎖 [族群認同])</p>
                             </div>
 
                             <div class="action-card locked" id="group-alliance">
@@ -208,14 +224,6 @@
                                 <div id="punish-targets" class="target-list">
                                     <!-- 動態生成對手按鈕 -->
                                 </div>
-                            </div>
-
-                            <div class="action-card locked" id="btn-explore">
-                                <div class="icon">🧭</div>
-                                <h3>探索</h3>
-                                <p>消耗 1 AP</p>
-                                <p class="effect">獲得 +2 能量</p>
-                                <p class="desc-text">(需解鎖 [民俗生物學])</p>
                             </div>
                         </div>
                     </div><!-- 結束 tab-actions -->
