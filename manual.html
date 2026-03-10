@@ -194,12 +194,22 @@
     <li>選擇玩家人數（1-5 人）</li>
     <li>設定遊戲參數：
         <ul>
-            <li><strong>基礎能量</strong>：每回合獲得的能量（預設 10）</li>
             <li><strong>最大回合數</strong>：遊戲上限回合（預設 20）</li>
-            <li><strong>強制消化投資</strong>：選用規則，需投資至少 3 點消化才能存活</li>
+            <li><strong>勝利目標 (CCS)</strong>：文化複雜度勝利門檻（預設 30）</li>
+            <li><strong>每回合額外能量點（0–7）</strong>：第 2 回合起每回合額外補貼，建議試玩從 3 開始（預設 0）</li>
+            <li><strong>強制消化投資</strong>：選用規則，每回合至少需投資 3 點消化才能確認</li>
         </ul>
     </li>
 </ol>
+
+<div class="card">
+    <strong>⚡ 能量系統：</strong>
+    <ul style="margin-top:8px;">
+        <li><strong>第 1 回合</strong>：所有玩家獲得 10 點初始能量</li>
+        <li><strong>第 2 回合起</strong>：上回合保留（最多 5）＋技術被動收入＋每回合額外能量點</li>
+        <li><strong>最低保護</strong>：回合啟始不足 3 點時自動補至 3 點</li>
+    </ul>
+</div>
 
 <!-- 回合結構 -->
 <h2>回合結構</h2>
@@ -216,33 +226,33 @@
 <p>每位玩家分配能量到三個領域：</p>
 <table>
     <thead>
-        <tr><th>領域</th><th>投資規則</th><th>回報</th></tr>
+        <tr><th>領域</th><th>每單位成本</th><th>基礎回報</th></tr>
     </thead>
     <tbody>
-        <tr><td><span class="emoji">🧠</span> 發展大腦</td><td>每 2 能量</td><td>獲得 1 AP（技術點）</td></tr>
-        <tr><td><span class="emoji">🍖</span> 維護消化</td><td>每 3 能量</td><td>下回合 +2 能量</td></tr>
-        <tr><td><span class="emoji">💪</span> 強化肌肉</td><td>每 2 能量</td><td>獲得 1 行動點</td></tr>
+        <tr><td><span class="emoji">🧠</span> 發展大腦</td><td>2 能量</td><td>+1 AP（技術點）</td></tr>
+        <tr><td><span class="emoji">🍖</span> 維護消化</td><td>3 能量</td><td>本回合 +2 能量（作為下回合資產）</td></tr>
+        <tr><td><span class="emoji">💪</span> 強化肌肉</td><td>2 能量</td><td>+1 行動點</td></tr>
     </tbody>
 </table>
 <div class="card tip">
-    <strong>提示：</strong>保留上限為 5 能量。投資回報受環境事件乘數影響。
+    <strong>提示：</strong>保留上限為 5 能量（強制限制）。所有投資回報受環境事件乘數及已解鎖技術效果影響。
 </div>
 
 <h3>3. 行動階段</h3>
 <p>使用行動點執行行動：</p>
 <table>
     <thead>
-        <tr><th>行動</th><th>消耗</th><th>效果</th></tr>
+        <tr><th>行動</th><th>消耗</th><th>效果</th><th>解鎖條件</th></tr>
     </thead>
     <tbody>
-        <tr><td><span class="emoji">🏹</span> 狩獵</td><td>1 行動點</td><td>+1 能量</td></tr>
-        <tr><td><span class="emoji">🏹✨</span> 強化狩獵</td><td>1 行動點</td><td>+2 能量（需解鎖 [長矛狩獵]）</td></tr>
-        <tr><td><span class="emoji">🌾</span> 農耕</td><td>1 行動點</td><td>+2 能量（需解鎖 [食物保存]）</td></tr>
-        <tr><td><span class="emoji">🧭</span> 探索</td><td>1 行動點</td><td>+2 能量（需解鎖 [民俗生物學]）</td></tr>
-        <tr><td><span class="emoji">⚔️</span> 掠奪</td><td>1 行動點</td><td>搶奪對手 2 能量（需解鎖 [族群認同]，不可對盟友執行）</td></tr>
-        <tr><td><span class="emoji">🛡️</span> 防禦</td><td>1 行動點</td><td>抵消 1 次掠奪（需解鎖 [族群認同]）</td></tr>
-        <tr><td><span class="emoji">🤝</span> 結盟</td><td>1 行動點</td><td>建立<strong>持久結盟</strong>，目標下回合 +1 能量，雙方永久封鎖互相掠奪（需解鎖 [族群認同]）</td></tr>
-        <tr><td><span class="emoji">⚖️</span> 懲罰（解盟）</td><td>1 行動點</td><td>解除與目標的結盟關係，目標 -1 能量；恢復掠奪資格（需解鎖 [社會規範]，只能對盟友執行）</td></tr>
+        <tr><td><span class="emoji">🏹</span> 狩獵</td><td>1 行動點</td><td>+1 能量（持有長矛狩獵時 +2）</td><td>無需解鎖</td></tr>
+        <tr><td><span class="emoji">🏹✨</span> 強化狩獵</td><td>1 行動點</td><td>+2 能量（持有長矛狩獵時 +3）</td><td>長矛狩獵</td></tr>
+        <tr><td><span class="emoji">🌾</span> 農耕</td><td>1 行動點</td><td>+2 能量</td><td>食物保存</td></tr>
+        <tr><td><span class="emoji">🧭</span> 探索</td><td>1 行動點</td><td>+2 能量</td><td>民俗生物學</td></tr>
+        <tr><td><span class="emoji">⚔️</span> 掠奪</td><td>1 行動點</td><td>搶奪對手 2 能量（不可對盟友執行）</td><td>族群認同</td></tr>
+        <tr><td><span class="emoji">🛡️</span> 防禦</td><td>1 行動點</td><td>抵消 1 次掠奪</td><td>族群認同</td></tr>
+        <tr><td><span class="emoji">🤝</span> 結盟</td><td>1 行動點</td><td>目標下回合 +1 能量；雙方永久封鎖互相掠奪</td><td>族群認同</td></tr>
+        <tr><td><span class="emoji">⚖️</span> 懲罰（解盟）</td><td>1 行動點</td><td>解除結盟，目標 -1 能量；恢復掠奪資格</td><td>社會規範（只可對盟友執行）</td></tr>
     </tbody>
 </table>
 
@@ -317,6 +327,35 @@
         <tr><td>Tier 5</td><td>15 AP</td><td>10</td></tr>
     </tbody>
 </table>
+
+<h3>技術卡效果一覽</h3>
+<table>
+    <thead>
+        <tr><th>技術卡</th><th>等級</th><th>路徑</th><th>持續效果</th><th>解鎖行動</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>🪨 石器製作</td><td>T1</td><td>工具</td><td>每回合免費 +1 行動點</td><td>—</td></tr>
+        <tr><td>🔥 火的控制</td><td>T1</td><td>消化</td><td>消化投資報酬 +20%；大腦 AP +10%</td><td>—</td></tr>
+        <tr><td>🌱 採集知識</td><td>T1</td><td>環境</td><td>消化投資報酬 +20%</td><td>—</td></tr>
+        <tr><td>💬 語言</td><td>T1</td><td>社會</td><td>可查看 1 位玩家本回合投資分配</td><td>—</td></tr>
+        <tr><td>🍖 烹飪技術</td><td>T2</td><td>消化</td><td>消化投資報酬再 +30%；每回合 +1 能量</td><td>—</td></tr>
+        <tr><td>🏹 長矛狩獵</td><td>T2</td><td>工具</td><td>所有狩獵行動額外 +1 能量</td><td>強化狩獵</td></tr>
+        <tr><td>🏳️ 族群認同</td><td>T2</td><td>社會</td><td>—</td><td>掠奪、防禦、結盟</td></tr>
+        <tr><td>🦋 民俗生物學</td><td>T2</td><td>環境</td><td>可預覽並重抽本回合事件</td><td>探索</td></tr>
+        <tr><td>🧂 食物保存</td><td>T3</td><td>消化</td><td>消化投資報酬 +100%；儲能無上限</td><td>農耕</td></tr>
+        <tr><td>⚒️ 複雜工具</td><td>T3</td><td>工具</td><td>所有投資報酬 +20%</td><td>—</td></tr>
+        <tr><td>📖 口語傳承</td><td>T3</td><td>社會</td><td>所有技術效果 ×1.5（放大其他技術加成）</td><td>—</td></tr>
+        <tr><td>🏔️ 環境適應</td><td>T3</td><td>環境</td><td>負面環境事件免疫</td><td>—</td></tr>
+        <tr><td>🏛️ 人造物系統</td><td>T4</td><td>跨路線</td><td>每回合 +3 能量；肌肉投資報酬 +100%</td><td>—</td></tr>
+        <tr><td>🎓 教學系統</td><td>T4</td><td>社會</td><td>可複製對手技術效果</td><td>—</td></tr>
+        <tr><td>⚖️ 社會規範</td><td>T4</td><td>社會分支</td><td>—</td><td>懲罰</td></tr>
+        <tr><td>📚 資訊資源</td><td>T4</td><td>環境</td><td>每回合 +2 AP</td><td>—</td></tr>
+        <tr><td>🚀 累積文化</td><td>T5</td><td>終極</td><td>每個已解鎖技術 +1 CCS</td><td>—</td></tr>
+    </tbody>
+</table>
+<div class="card tip">
+    <strong>口語傳承的放大效果：</strong>解鎖後，所有其他技術的數值型加成（消化報酬、大腦加成、投資報酬等）×1.5。例如：火的控制原本 +20% 消化報酬，口語傳承後變成 +30%。
+</div>
 
 <h3>特殊技術</h3>
 <div class="card">
@@ -405,7 +444,7 @@
 
 <footer>
     <p>文化演化賽局 | 基於《The Secret of Our Success》by Joseph Henrich</p>
-    <p>Version Phase 4.1 | 2026-03</p>
+    <p>Version Phase 5 | 2026-03</p>
 </footer>
 
 </body>

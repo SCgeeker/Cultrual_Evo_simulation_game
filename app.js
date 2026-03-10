@@ -1,5 +1,5 @@
 // === 預設值 ===
-let BASE_ENERGY = 10; // 可由設定畫面覆寫
+const BASE_ENERGY = 10; // 第 1 回合初始能量（固定值）
 const COSTS = { brain: 2, guts: 3, muscle: 2 };
 
 // === 事件資料 ===
@@ -107,7 +107,7 @@ const TECH_CARDS = {
         icon: '🍖',
         effects: {
             digestionReduction: 0.30,  // 消化成本再 -30%
-            energyCapBonus: 3          // 能量上限 +3
+            passiveEnergy: 1           // 每回合 +1 能量（烹飪提升基礎代謝效率）
         },
         description: '烹飪讓食物更容易消化，釋放更多能量',
         flavorText: '熟食革命：我們的祖先開始用更少的腸道，換取更大的大腦。'
@@ -509,7 +509,7 @@ function startGame() {
     const count = parseInt(document.getElementById('player-count').value);
     game.maxRounds = parseInt(document.getElementById('max-rounds').value) || 20;
     game.targetCCS = parseInt(document.getElementById('target-ccs').value) || 30;
-    BASE_ENERGY = parseInt(document.getElementById('base-energy').value) || 10;
+    game.bonusEnergy = Math.min(7, Math.max(0, parseInt(document.getElementById('bonus-energy').value) || 0));
     game.requireGuts = !!document.getElementById('require-guts').checked;
     game.players = [];
     game.pendingAttacks = [];
@@ -570,15 +570,17 @@ function startRound() {
         p.roundLog = { lost: 0, gained: 0 };
 
         // 應用延遲的能量調整 (被掠奪的效果在此生效)
-        // 確保 energy 不小於 0
         p.energy += p.pendingEnergy;
-        if (p.energy < 0) p.energy = 0;
         p.pendingEnergy = 0; // 重置
 
-        // 發放基礎能量 (回合開始時發放)
+        // 套用技術被動能量 + 每回合額外能量（第 2 回合起；第 1 回合初始能量由 startGame 設定）
         if (game.round > 1) {
-            p.energy += BASE_ENERGY;
+            p.energy += TechTreeManager.getPassiveEnergy(p);
+            p.energy += game.bonusEnergy;
         }
+
+        // 最低能量保護：確保每回合至少有 3 點可分配（防止死亡螺旋）
+        if (p.energy < 3) p.energy = 3;
     });
 
     // 抽取隨機事件
@@ -758,11 +760,11 @@ function updateInvestUI() {
     document.getElementById('reserved-energy').textContent = reserved;
 
     // 下回合總能量預估 (Forecast)
-    // 預估值包含：目前保留 + 消化收益 + 基礎收入 (10) + 待處理的增減 (pendingEnergy)
-    // 這裡的 pendingEnergy 還不知道本回合的掠奪結果 (因為還沒發生)，所以只能是 0 (因為 startRound 已清空)
-    // 這樣沒問題，玩家只能看到已知的。
+    // 預估值包含：目前保留 + 消化收益 + 技術被動能量
+    // (pendingEnergy 為 0，因掠奪結果尚未發生)
     const estimatedYield = calcRewardWithMultiplier(player, 'guts', bids.guts);
-    const estimatedTotal = reserved + estimatedYield + BASE_ENERGY + player.pendingEnergy;
+    const estimatedPassive = TechTreeManager.getPassiveEnergy(player);
+    const estimatedTotal = reserved + estimatedYield + estimatedPassive + game.bonusEnergy + player.pendingEnergy;
 
     document.getElementById('forecast-total').textContent = estimatedTotal >= 0 ? estimatedTotal : 0;
 
@@ -770,7 +772,7 @@ function updateInvestUI() {
     const btn = document.getElementById('confirm-btn');
 
     const MAX_RESERVE = 5;
-    const MIN_GUTS = 3; // 最低消化投資
+    const MIN_GUTS = 3; // 最低消化投資（強制規則）
 
     if (reserved < 0) {
         warning.textContent = '超出預算！請減少投資。';
@@ -780,7 +782,7 @@ function updateInvestUI() {
         warning.textContent = `保留上限 ${MAX_RESERVE}！請再投資 ${reserved - MAX_RESERVE} 能量。`;
         warning.classList.remove('hidden');
         btn.disabled = true;
-    } else if (game.requireGuts === true && bids.guts < MIN_GUTS) {
+    } else if (bids.guts < MIN_GUTS) {
         warning.textContent = `生存規則：消化投資至少需要 ${MIN_GUTS} 點能量！`;
         warning.classList.remove('hidden');
         btn.disabled = true;
@@ -820,7 +822,10 @@ function confirmInvest() {
     // 資源發放
     player.totalAP += player.results.ap;
     player.currentAP += player.results.ap;
-    player.actionPoints = player.results.actions; // 行動點不累積，本回合發放
+    // 行動點 = 肌肉投資結果 + 技術免費肌肉投資點（石器製作）+ 技術每回合固定 AP（資訊資源）
+    player.actionPoints = player.results.actions
+        + TechTreeManager.getTechEffectSum(player, 'freeMuscleInvestment')
+        + TechTreeManager.getTechEffectSum(player, 'bonusAP');
 
     // 重新計算 CCS (文化複雜度)
     player.ccs = TechTreeManager.calculateCCS(player);
@@ -1076,9 +1081,24 @@ const TechTreeManager = {
         return TechTreeUI.formatEffect(key, value);
     },
 
+    // 計算玩家所有技術提供的每回合被動能量
+    getPassiveEnergy(player) {
+        return this.getTechEffectSum(player, 'passiveEnergy');
+    },
+
+    // 加總玩家所有已解鎖技術的指定數值型效果
+    getTechEffectSum(player, key) {
+        return player.unlockedTechs.reduce((sum, techId) => {
+            const eff = TECH_CARDS[techId]?.effects;
+            return sum + (eff && eff[key] ? eff[key] : 0);
+        }, 0);
+    },
+
     getEffectiveMultipliers(player) {
         const base = game.baseMultipliers || { brain: 1, guts: 1, muscle: 1 };
         const mults = { ...base };
+
+        // 事件修正（已有）
         const eventId = game.currentEvent ? game.currentEvent.id : null;
         if (eventId) {
             player.unlockedTechs.forEach(techId => {
@@ -1091,6 +1111,27 @@ const TechTreeManager = {
                 }
             });
         }
+
+        // 技術卡固有效果
+        // techEffectBonus（口語傳承）會放大其他所有技術效果
+        const techEffectMult = 1 + this.getTechEffectSum(player, 'techEffectBonus');
+
+        // digestionReduction（外部消化路線）與 gutsBonus（環境知識路線）皆提升 guts 報酬，累加後套用
+        const digestionBonus  = (this.getTechEffectSum(player, 'digestionReduction') +
+                                  this.getTechEffectSum(player, 'gutsBonus')) * techEffectMult;
+        const brainBonus      = this.getTechEffectSum(player, 'brainBonus')         * techEffectMult;
+        const muscleBonus     = this.getTechEffectSum(player, 'muscleReduction')    * techEffectMult;
+        const investmentBonus = this.getTechEffectSum(player, 'investmentBonus')    * techEffectMult;
+
+        mults.guts   *= (1 + digestionBonus);
+        mults.brain  *= (1 + brainBonus);
+        mults.muscle *= (1 + muscleBonus);
+
+        // investmentBonus 全面加成
+        mults.brain  *= (1 + investmentBonus);
+        mults.guts   *= (1 + investmentBonus);
+        mults.muscle *= (1 + investmentBonus);
+
         return mults;
     },
 
@@ -1386,7 +1427,6 @@ const TechTreeUI = {
         const effectMap = {
             digestionReduction: `消化效率 +${Math.round(value * 100)}% (節省能量)`,
             brainBonus: `AP 產出 +${Math.round(value * 100)}%`,
-            energyCapBonus: `每回合額外 +${value} 能量`,
             unlimitedStorage: '能量儲存無上限',
             passiveEnergy: `每回合 +${value} 能量`,
             muscleReduction: `肌肉投資效率 +${Math.round(value * 100)}%`,
@@ -1873,14 +1913,15 @@ function performAction(type, targetIndex) {
 
     const player = game.players[game.currentIndex];
 
+    const huntBonus = TechTreeManager.getTechEffectSum(player, 'huntingBonus');
     if (type === 'hunt') {
-        tempState.energyChange += 1; // 基礎狩獵固定 +1，與長矛狩獵無關
+        tempState.energyChange += 1 + huntBonus; // 基礎 +1，長矛狩獵技術額外加成
         tempState.counts.hunt++;
         tempState.ap--;
     } else if (type === 'enhanced_hunt') {
         // 強化狩獵需解鎖長矛狩獵
         if (!TechTreeManager.hasTech(player, 'spear_hunting')) return;
-        tempState.energyChange += 2;
+        tempState.energyChange += 2 + huntBonus;
         tempState.counts.enhanced_hunt++;
         tempState.ap--;
     } else if (type === 'farm') {
@@ -1949,7 +1990,8 @@ function showPersonalResult(player) {
     // 簡單預估：剩餘 AP * huntReward
     const potentialActions = player.actionPoints * huntReward;
 
-    let nextTotal = player.energy + BASE_ENERGY + player.pendingEnergy + potentialActions;
+    const passiveBonus = TechTreeManager.getPassiveEnergy(player);
+    let nextTotal = player.energy + passiveBonus + game.bonusEnergy + player.pendingEnergy + potentialActions;
     if (nextTotal < 0) nextTotal = 0;
 
     document.getElementById('personal-potentials').textContent = `+${potentialActions}`;
@@ -2049,8 +2091,8 @@ function showResult() {
 
     game.players.forEach(p => {
         const row = document.createElement('tr');
-        // 修正：總可用能量 (預測下回合起始)
-        let nextTotal = p.energy + BASE_ENERGY + p.pendingEnergy;
+        // 總可用能量 (預測下回合起始：保留 + 技術被動能量 + 待處理調整)
+        let nextTotal = p.energy + TechTreeManager.getPassiveEnergy(p) + game.bonusEnergy + p.pendingEnergy;
         if (nextTotal < 0) nextTotal = 0;
 
         // 生成行動階段的描述字串
