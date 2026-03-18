@@ -18,7 +18,7 @@
 
 以網路瀏覽器開啟[遊戲首頁](https://scgeeker.github.io/Cultrual_Evo_simulation_game/)
 
-### 在本機瀏覽器遊玩
+### 在本機瀏覽器遊玩（單機熱座）
 
 1. Clone 或下載此 repo
 2. 在瀏覽器開啟 `index.html`（無需伺服器，純靜態頁面）
@@ -31,6 +31,74 @@ cd Cultrual_Evo_simulation_game
 ```
 
 > **提示**：推薦 3 人以上一起玩，以體驗「集體大腦」的效果（CH 12）。
+
+### 多裝置 LAN 連線模式（教室用，Beta）
+
+讓教師機作為主持人，學生各自使用手機或筆電連線，每人控制自己的角色。
+
+#### 事前準備
+
+1. **所有裝置須在同一 WiFi 網路**（建議使用教室區網或教師手機熱點）
+2. **教師機**需安裝 Python 3.9+，並切換至 `mobile` 分支：
+
+```bash
+git clone -b mobile https://github.com/SCgeeker/Cultrual_Evo_simulation_game.git
+cd Cultrual_Evo_simulation_game
+```
+
+3. 安裝 Python 依賴：
+
+```bash
+pip install -r requirements.txt
+# 依賴：fastapi, uvicorn, websockets
+```
+
+#### 啟動流程
+
+**Step 1 — 教師機啟動伺服器**
+
+```bash
+python server.py
+# 預設 Port 8080，可加 --port 參數調整
+python server.py --port 8080
+```
+
+啟動後終端機會顯示：
+
+```
+====================================================
+  🎮  文化演化賽局 LAN 伺服器
+====================================================
+  本機 IP  ：192.168.x.x
+  學生連線 ：http://192.168.x.x:8080
+  主持人   ：http://localhost:8080
+====================================================
+```
+
+**Step 2 — 教師機開啟遊戲（主持人）**
+
+在教師機瀏覽器輸入 `http://localhost:8080`，開啟遊戲頁面，選擇「**多裝置模式 → 主持人**」，設定房間 ID（例如 `room1`）。
+
+**Step 3 — 學生裝置連線（玩家）**
+
+學生在自己的裝置瀏覽器輸入教師機 IP（終端機顯示的網址），例如：
+
+```
+http://192.168.x.x:8080
+```
+
+選擇「**多裝置模式 → 加入遊戲**」，輸入相同的房間 ID（`room1`）與玩家名稱即可加入。
+
+**Step 4 — 開始遊戲**
+
+主持人確認所有玩家已加入後，點擊「開始遊戲」。遊戲狀態會即時同步至所有連線裝置。
+
+#### 注意事項
+
+- 多裝置模式為 **Beta 功能**，建議教師先自行測試
+- 若連線失敗，請確認防火牆未封鎖 Port 8080
+- Windows 用戶首次啟動時，系統可能會彈出防火牆授權視窗，請選擇「允許存取」
+- 按 `Ctrl+C` 可停止伺服器
 
 ---
 
@@ -101,7 +169,16 @@ cd Cultrual_Evo_simulation_game
 
 ---
 
+## 分支說明
+
+| 分支 | 說明 |
+|------|------|
+| `main` | 穩定版：單機熱座模式，可直接透過 GitHub Pages 遊玩 |
+| `mobile` | 開發版：新增多裝置 LAN 連線功能（Beta），含 `server.py`、`multiplayer.js` |
+
 ## 檔案結構
+
+### `main` 分支（穩定版）
 
 ```
 cost-of-culture-game/
@@ -113,6 +190,14 @@ cost-of-culture-game/
 ├── GAME_MANUAL.md                # 純文字版遊戲規則（備用）
 ├── TECH_CARD_DEVELOPMENT_PLAN.md # 技術卡開發計畫文件
 └── README.md                     # 本文件
+```
+
+### `mobile` 分支（額外檔案）
+
+```
+├── server.py                     # FastAPI LAN 伺服器
+├── multiplayer.js                # WebSocket 多裝置同步模組
+└── requirements.txt              # Python 依賴清單
 ```
 
 ---
@@ -153,4 +238,4 @@ cost-of-culture-game/
 
 ---
 
-*Version Phase 4 | 最後更新：2026-02-24*
+*Version Phase 5 | 最後更新：2026-03-18*
