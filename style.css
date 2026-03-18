@@ -209,6 +209,16 @@ header h1 {
 }
 
 /* Phase 2 新增樣式 */
+.setup-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.05em;
+    margin: 20px 0 8px;
+    border-top: 1px solid #333;
+    padding-top: 14px;
+}
+
 .setup-form {
     margin-bottom: 16px;
 }
@@ -1152,4 +1162,132 @@ header h1 {
     padding-left: 8px;
     margin-left: 4px;
     margin-top: 8px;
+}
+/* ========== 多裝置連線 UI ========== */
+
+/* 通知列 */
+.mp-notice {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9000;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+}
+.mp-notice-info  { background: #1565c0; color: #fff; }
+.mp-notice-warn  { background: #b71c1c; color: #fff; }
+
+/* 身分徽章 */
+.mp-badge {
+    display: none;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+#mp-host-badge   { background: #e65100; color: #fff; }
+#mp-player-badge { background: #1565c0; color: #fff; }
+
+/* 連線按鈕 */
+#mp-open-btn {
+    padding: 6px 14px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-left: 12px;
+}
+#mp-open-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 連線 Overlay */
+.mp-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 8000;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.mp-overlay-box {
+    background: var(--bg-secondary, #1e1e2e);
+    border: 1px solid #444;
+    border-radius: 16px;
+    padding: 32px;
+    width: min(480px, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.mp-overlay-box h3 {
+    margin: 0 0 20px;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+.mp-overlay-box label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    margin-top: 12px;
+}
+.mp-overlay-box input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background: var(--bg-primary, #13131f);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+.mp-lobby-info {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+.mp-beta-warn {
+    margin-top: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(183, 28, 28, 0.15);
+    border: 1px solid #b71c1c;
+    font-size: 0.8rem;
+    color: #ef9a9a;
+    line-height: 1.5;
+}
+.mp-overlay-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+.mp-overlay-btns button {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+#mp-connect-btn-host   { background: #e65100; color: #fff; }
+#mp-connect-btn-player { background: #1565c0; color: #fff; }
+#mp-overlay-close      { background: #444; color: #fff; }
+.mp-overlay-btns button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 等待動畫 */
+.waiting-spinner {
+    font-size: 3rem;
+    animation: mp-pulse 1.5s ease-in-out infinite;
+}
+@keyframes mp-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.9); }
 }

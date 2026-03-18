@@ -9,13 +9,69 @@
 </head>
 
 <body>
-    <div id="app">
+<div id="app">
+        <!-- 多裝置通知條 -->
+        <div id="mp-notice" class="mp-notice" style="display:none;"></div>
+        <!-- 身份徽章 -->
+        <span id="mp-host-badge"   class="mp-badge mp-badge-host"   style="display:none;">🎛️ 主持人</span>
+        <span id="mp-player-badge" class="mp-badge mp-badge-player" style="display:none;"></span>
+
         <header>
             <h1>文化演化賽局</h1>
             <a href="manual.html" id="manual-btn" style="display:inline-block;background:#e94560;color:white;text-decoration:none;padding:6px 16px;border-radius:8px;font-size:0.85rem;margin:6px 4px;">📖 玩家手冊</a>
+            <button id="mp-open-btn" style="background:#37474f;color:#90caf9;border:1px solid #546e7a;padding:6px 14px;border-radius:8px;font-size:0.85rem;margin:6px 4px;cursor:pointer;">🌐 多裝置連線</button>
             <!-- 教師引導手冊：請直接輸入 guide.html 開啟，首頁不顯示連結 -->
             <p class="subtitle" id="game-phase">遊戲設置</p>
+            <div id="mp-room-banner" style="display:none;
+                background:#1a3a2a; border:1px solid #4caf50; border-radius:8px;
+                padding:4px 16px; margin:4px auto; font-size:1rem; color:#a5d6a7;
+                letter-spacing:0.05em;">
+                🏠 房間：<strong id="mp-room-banner-id" style="color:#fff;font-size:1.2rem;"></strong>
+            </div>
         </header>
+
+        <!-- 多裝置連線 Overlay -->
+        <div id="mp-overlay" class="mp-overlay" style="display:none;">
+            <div class="mp-overlay-box">
+                <button id="mp-overlay-close" class="mp-overlay-close">✕</button>
+                <h3>🌐 多裝置連線設定</h3>
+
+                <div class="mp-beta-warn">
+                    ⚠️ Beta 功能：目前為最簡化部署，遊戲邏輯驗證尚不完整。<br>
+                    建議僅用於課堂示範，勿作正式評分依據。
+                </div>
+
+                <div class="setup-form">
+                    <label>伺服器 IP</label>
+                    <input type="text" id="mp-server-ip" placeholder="例：192.168.1.100（玩家必填）">
+                </div>
+                <div class="setup-form">
+                    <label>Port</label>
+                    <input type="number" id="mp-server-port" value="8080">
+                </div>
+                <div class="setup-form">
+                    <label>房間 ID</label>
+                    <input type="text" id="mp-room-id" value="room1" placeholder="自訂房間名稱">
+                </div>
+                <div class="setup-form">
+                    <label>您的部落名稱 <span style="color:#888;font-size:0.85em;">（玩家填寫）</span></label>
+                    <input type="text" id="mp-player-name" placeholder="例：獵人部落">
+                </div>
+
+                <div style="margin-top:8px;font-size:0.8em;color:#888;">
+                    已連線玩家：<span id="mp-lobby-count">0</span> 人
+                </div>
+
+                <div class="mp-overlay-btns">
+                    <button id="mp-connect-btn-host"   class="btn-secondary">🎛️ 以主持人加入</button>
+                    <button id="mp-connect-btn-player" class="btn-primary">🎮 以玩家加入</button>
+                </div>
+
+                <div style="margin-top:12px;text-align:center;font-size:0.78em;color:#666;">
+                    教師先執行 <code>python server.py</code>，學生再以玩家身份加入
+                </div>
+            </div>
+        </div>
 
         <main>
             <!-- 設定畫面 -->
@@ -48,7 +104,67 @@
                         強制消化投資 (最少 3 點才能存活)
                     </label>
                 </div>
+                <!-- 開局文化起點設定 -->
+                <div class="setup-section-title">🦴 開局文化起點</div>
+                <div class="setup-form">
+                    <label>文化起點預設包</label>
+                    <select id="start-preset">
+                        <option value="none">標準開局（無預解鎖）</option>
+                        <option value="oldowan">奧杜威人（石器製作）</option>
+                        <option value="erectus">直立人（石器＋火＋採集知識）</option>
+                        <option value="archaic">早期智人（石器＋火＋採集＋語言）</option>
+                        <option value="behavioral">行為現代人基礎（全T1＋烹飪＋長矛）</option>
+                    </select>
+                </div>
+                <div id="preset-preview"></div>
+                <div class="setup-form">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="differential-start" style="width: auto;">
+                        差異化開局（隨機讓半數玩家套用預設，其餘標準開局）
+                    </label>
+                </div>
+
                 <div id="player-names"></div>
+
+                <!-- 連線版：勾選後採用玩家自訂名稱 -->
+                <div class="setup-form">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="mp-use-names" style="width:auto;">
+                        🌐 採用連線玩家自訂名稱
+                    </label>
+                    <div id="mp-roster-list" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; min-height:24px;"></div>
+                </div>
+
+                <!-- 結算畫面欄位屏蔽 -->
+                <div class="setup-section-title">📊 結算畫面顯示設定</div>
+                <div class="setup-form">
+                    <label style="font-size:0.85rem;color:#888;display:block;margin-bottom:6px;">
+                        勾選後該欄位在結算時以「—」顯示（適合課堂討論前隱藏資訊）：
+                    </label>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;">
+                            <input type="checkbox" id="hide-col-brain"    style="width:auto;"> 大腦(AP)
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;">
+                            <input type="checkbox" id="hide-col-guts"     style="width:auto;"> 消化(⚡)
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;">
+                            <input type="checkbox" id="hide-col-muscle"   style="width:auto;"> 肌肉(⚔️)
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;">
+                            <input type="checkbox" id="hide-col-ccs"      style="width:auto;"> 文化(CCS)
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;">
+                            <input type="checkbox" id="hide-col-action"   style="width:auto;"> 收益(⚡)
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;">
+                            <input type="checkbox" id="hide-col-reserved" style="width:auto;"> 保留(⚡)
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;">
+                            <input type="checkbox" id="hide-col-next"     style="width:auto;"> 下回合(⚡)
+                        </label>
+                    </div>
+                </div>
 
                 <!-- 演化時代瀏覽 -->
                 <div class="evo-browser">
@@ -361,10 +477,179 @@
                     </div>
                 </div>
             </section>
+            <!-- 等待畫面（多裝置模式，非當前玩家回合） -->
+            <section id="screen-waiting" class="hidden">
+                <div class="content-box" style="text-align:center;padding:60px 40px;">
+                    <div class="waiting-spinner">⏳</div>
+                    <p id="waiting-message" style="font-size:1.2rem;margin-top:20px;color:var(--text-secondary);">
+                        等待其他玩家...
+                    </p>
+                </div>
+            </section>
         </main>
     </div>
 
+    <script src="multiplayer.js"></script>
     <script src="app.js"></script>
+
+    <!-- ══════════════════════════════════════════════
+         開發後台面板（Dev Panel）
+         快捷鍵：Ctrl+Shift+D  開啟／關閉
+         僅在本機開發時使用；正式課堂不影響遊戲邏輯
+         ══════════════════════════════════════════════ -->
+    <div id="dev-panel" style="
+        display:none; position:fixed; bottom:0; right:0; z-index:9999;
+        width:420px; max-height:55vh;
+        background:#111; border:1px solid #333; border-radius:8px 0 0 0;
+        font-family:monospace; font-size:12px; color:#ccc;
+        display:none; flex-direction:column;">
+
+        <!-- 標題列 -->
+        <div style="
+            display:flex; align-items:center; justify-content:space-between;
+            background:#1e1e1e; padding:4px 10px; border-bottom:1px solid #333;
+            border-radius:8px 0 0 0; cursor:move;" id="dev-panel-header">
+            <span style="color:#7ec8e3;font-weight:bold;">🛠 Dev Panel</span>
+            <div style="display:flex;gap:6px;">
+                <button onclick="devSnapshot()" style="
+                    background:#1a3a2a;color:#a5d6a7;border:1px solid #2e7d32;
+                    padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;">
+                    📸 Snapshot
+                </button>
+                <button onclick="devClear()" style="
+                    background:#2a1a1a;color:#ef9a9a;border:1px solid #7f3a3a;
+                    padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;">
+                    🗑 Clear
+                </button>
+                <button onclick="devToggle()" style="
+                    background:#1a1a2a;color:#90caf9;border:1px solid #3a3a7f;
+                    padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <!-- 日誌列表 -->
+        <div id="dev-log" style="
+            flex:1; overflow-y:auto; padding:6px 8px;
+            display:flex; flex-direction:column-reverse; gap:1px;">
+        </div>
+    </div>
+
+    <!-- 浮動觸發鈕（右下角小點，常駐） -->
+    <button id="dev-fab" onclick="devToggle()" title="Dev Panel (Ctrl+Shift+D)" style="
+        position:fixed; bottom:8px; right:8px; z-index:9998;
+        width:22px; height:22px; border-radius:50%;
+        background:#333; border:1px solid #555; color:#666;
+        font-size:10px; cursor:pointer; padding:0; line-height:1;
+        opacity:0.4; transition:opacity 0.2s;"
+        onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0.4">
+        🛠
+    </button>
+
+    <script>
+    (function () {
+        /* ── 狀態 ── */
+        let devOpen = false;
+        const panel = document.getElementById('dev-panel');
+        const log   = document.getElementById('dev-log');
+
+        /* ── 開關 ── */
+        window.devToggle = function () {
+            devOpen = !devOpen;
+            panel.style.display = devOpen ? 'flex' : 'none';
+        };
+
+        /* ── 鍵盤快捷鍵 Ctrl+Shift+D ── */
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                devToggle();
+            }
+        });
+
+        /* ── 寫入一筆日誌 ── */
+        const TAG_COLOR = {
+            SEND: '#64b5f6', RECV: '#81c784', NAME: '#ffb74d',
+            WARN: '#ef5350', INFO: '#b0bec5', SNAP: '#ce93d8'
+        };
+        window.devWrite = function (tag, data) {
+            const time = new Date().toLocaleTimeString('zh-TW',
+                { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const color = TAG_COLOR[tag] || '#ccc';
+            const text  = typeof data === 'string' ? data : JSON.stringify(data, null, 0);
+            const div   = document.createElement('div');
+            div.style.cssText = 'border-bottom:1px solid #1e1e1e;padding:2px 0;white-space:pre-wrap;word-break:break-all;';
+            div.innerHTML =
+                `<span style="color:#444">[${time}]</span> ` +
+                `<span style="color:${color};font-weight:bold">[${tag}]</span> ` +
+                `<span style="color:#ddd">${text}</span>`;
+            log.appendChild(div);      // column-reverse 自動捲到最新
+        };
+
+        /* ── 攔截 console.log / console.warn（僅 [MP] 前綴） ── */
+        const _log  = console.log.bind(console);
+        const _warn = console.warn.bind(console);
+
+        console.log = function (...args) {
+            _log(...args);
+            const msg = args.join(' ');
+            if (msg.startsWith('[MP]')) {
+                const tag = msg.includes('RECV') ? 'RECV'
+                          : msg.includes('SEND') ? 'SEND'
+                          : msg.includes('setName') ? 'NAME'
+                          : 'INFO';
+                devWrite(tag, args.slice(1));
+            }
+        };
+        console.warn = function (...args) {
+            _warn(...args);
+            const msg = args.join(' ');
+            if (msg.startsWith('[MP]')) devWrite('WARN', args.slice(1));
+        };
+
+        /* ── Snapshot 快照 ── */
+        window.devSnapshot = function () {
+            const snap = {
+                mp_mode:        (typeof mp !== 'undefined') ? mp.mode : '—',
+                mp_myName:      (typeof mp !== 'undefined') ? mp.myName : '—',
+                mp_myIdx:       (typeof mp !== 'undefined') ? mp.myPlayerIndex : '—',
+                mp_playerNames: (typeof mp !== 'undefined') ? mp.playerNames : {},
+                mp_connected:   (typeof mp !== 'undefined') ? mp.connected : false,
+                useNames_cb:    document.getElementById('mp-use-names')?.checked ?? '—',
+                game_players:   (typeof game !== 'undefined' && game.players)
+                                    ? game.players.map((p, i) => `[${i}]${p.name}`) : '—',
+                game_round:     (typeof game !== 'undefined') ? game.round : '—',
+                game_curIdx:    (typeof game !== 'undefined') ? game.currentIndex : '—'
+            };
+            devWrite('SNAP', snap);
+            if (!devOpen) devToggle();   // 有快照自動開面板
+        };
+
+        /* ── Clear ── */
+        window.devClear = function () { log.innerHTML = ''; };
+
+        /* ── 可拖曳（拖標題列） ── */
+        const header = document.getElementById('dev-panel-header');
+        let drag = false, ox = 0, oy = 0;
+        header.addEventListener('mousedown', e => {
+            drag = true;
+            ox = e.clientX - panel.getBoundingClientRect().left;
+            oy = e.clientY - panel.getBoundingClientRect().top;
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', e => {
+            if (!drag) return;
+            panel.style.left   = (e.clientX - ox) + 'px';
+            panel.style.top    = (e.clientY - oy) + 'px';
+            panel.style.right  = 'auto';
+            panel.style.bottom = 'auto';
+        });
+        document.addEventListener('mouseup', () => { drag = false; });
+
+        devWrite('INFO', '開發後台已載入。Ctrl+Shift+D 開關，devSnapshot() 可手動快照');
+    })();
+    </script>
 </body>
 
 </html>

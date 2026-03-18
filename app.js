@@ -386,6 +386,35 @@ const TECH_CARDS = {
     }
 };
 
+// === 開局文化起點預設包 ===
+const START_PRESETS = {
+    none: {
+        name: '標準開局',
+        desc: '所有部落從零開始',
+        techs: []
+    },
+    oldowan: {
+        name: '奧杜威人',
+        desc: '260萬–150萬年前 | Homo habilis',
+        techs: ['stone_tools']
+    },
+    erectus: {
+        name: '直立人',
+        desc: '150萬–50萬年前 | Homo erectus',
+        techs: ['stone_tools', 'fire_control', 'gathering_knowledge']
+    },
+    archaic: {
+        name: '早期智人',
+        desc: '50萬–10萬年前 | Archaic Homo sapiens',
+        techs: ['stone_tools', 'fire_control', 'gathering_knowledge', 'language']
+    },
+    behavioral: {
+        name: '行為現代人基礎',
+        desc: '10萬年前起 | Behavioral Modernity',
+        techs: ['stone_tools', 'fire_control', 'gathering_knowledge', 'language', 'cooking', 'spear_hunting']
+    }
+};
+
 // === 遊戲狀態 ===
 const game = {
     players: [],
@@ -409,7 +438,8 @@ const screens = {
     actionInfo: document.getElementById('screen-action-info'),
     personalResult: document.getElementById('screen-personal-result'),
     result: document.getElementById('screen-result'),
-    gameOver: document.getElementById('screen-game-over')
+    gameOver: document.getElementById('screen-game-over'),
+    waiting: document.getElementById('screen-waiting')
 };
 
 const sliders = {
@@ -444,6 +474,29 @@ function initSetup() {
 
     countSelect.addEventListener('change', renderNameInputs);
     renderNameInputs();
+
+    // 預設包預覽
+    function renderPresetPreview() {
+        const key = document.getElementById('start-preset').value;
+        const preset = START_PRESETS[key];
+        const div = document.getElementById('preset-preview');
+        if (!div) return;
+        if (!preset || preset.techs.length === 0) {
+            div.innerHTML = '';
+            return;
+        }
+        const chips = preset.techs.map(id => {
+            const t = TECH_CARDS[id];
+            return t ? `<span class="evo-era-tech-chip">${t.icon} ${t.name}</span>` : '';
+        }).join('');
+        const totalCCS = preset.techs.reduce((s, id) => s + (TECH_CARDS[id]?.ccsValue || 0), 0);
+        div.innerHTML = `<div style="margin-top:6px;font-size:0.85em;color:#aaa;">${preset.desc}</div>
+            <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>
+            <div style="margin-top:6px;font-size:0.8em;color:#e91e63;">開局 CCS +${totalCCS}</div>`;
+    }
+
+    document.getElementById('start-preset').addEventListener('change', renderPresetPreview);
+    renderPresetPreview();
 
     // 渲染演化時代瀏覽列表
     renderEvoEraBrowser();
@@ -505,19 +558,46 @@ function renderEvoEraBrowser() {
     });
 }
 
+// 將預設包的技術套用到玩家（不扣 AP，開局免費贈與）
+function applyStartingTechs(player, techIds) {
+    techIds.forEach(techId => {
+        if (!player.unlockedTechs.includes(techId)) {
+            player.unlockedTechs.push(techId);
+            const tech = TECH_CARDS[techId];
+            if (tech && player.pathProgress[tech.path] !== undefined) {
+                player.pathProgress[tech.path] = Math.max(player.pathProgress[tech.path], tech.tier);
+            }
+        }
+    });
+    player.ccs = TechTreeManager.calculateCCS(player);
+}
+
 function startGame() {
     const count = parseInt(document.getElementById('player-count').value);
     game.maxRounds = parseInt(document.getElementById('max-rounds').value) || 20;
     game.targetCCS = parseInt(document.getElementById('target-ccs').value) || 30;
     game.bonusEnergy = Math.min(7, Math.max(0, parseInt(document.getElementById('bonus-energy').value) || 0));
     game.requireGuts = !!document.getElementById('require-guts').checked;
+    game.resultColMask = {
+        brain:    !!document.getElementById('hide-col-brain')?.checked,
+        guts:     !!document.getElementById('hide-col-guts')?.checked,
+        muscle:   !!document.getElementById('hide-col-muscle')?.checked,
+        ccs:      !!document.getElementById('hide-col-ccs')?.checked,
+        action:   !!document.getElementById('hide-col-action')?.checked,
+        reserved: !!document.getElementById('hide-col-reserved')?.checked,
+        next:     !!document.getElementById('hide-col-next')?.checked,
+    };
     game.players = [];
     game.pendingAttacks = [];
     game.pendingAlliances = [];
     game.pendingPunishments = [];
 
     for (let i = 0; i < count; i++) {
-        const name = document.getElementById(`name-${i}`).value || `部落 ${i + 1}`;
+        const useConnected = document.getElementById('mp-use-names')?.checked;
+        const name = (useConnected && mp.playerNames[i])
+            || document.getElementById(`name-${i}`).value
+            || `部落 ${i + 1}`;
+        console.log('[MP] startGame player', i, { useConnected, playerName: mp.playerNames[i], formValue: document.getElementById(`name-${i}`)?.value, resolved: name });
         game.players.push({
             name,
             energy: BASE_ENERGY,
@@ -546,6 +626,24 @@ function startGame() {
     }
     game.currentIndex = 0;
     game.round = 1;
+
+    // === 開局預設包套用 ===
+    const presetKey = document.getElementById('start-preset').value;
+    const differential = document.getElementById('differential-start').checked;
+    const preset = START_PRESETS[presetKey];
+
+    if (preset && preset.techs.length > 0) {
+        if (!differential) {
+            // 模式一：所有玩家套用同一預設
+            game.players.forEach(p => applyStartingTechs(p, preset.techs));
+        } else {
+            // 模式二：隨機決定半數玩家套用預設（後手補償：最後行動玩家優先）
+            const n = game.players.length;
+            const luckyCount = Math.max(1, Math.floor(n / 2));
+            const indices = [...Array(n).keys()].sort(() => Math.random() - 0.5);
+            indices.slice(0, luckyCount).forEach(i => applyStartingTechs(game.players[i], preset.techs));
+        }
+    }
 
     // 清空所有玩家防禦點
     game.players.forEach(p => p.defensePoints = 0);
@@ -579,9 +677,16 @@ function startRound() {
             p.energy += game.bonusEnergy;
         }
 
-        // 最低能量保護：確保每回合至少有 3 點可分配（防止死亡螺旋）
-        if (p.energy < 3) p.energy = 3;
     });
+
+    // 終止條件1：第2回合起，任一玩家可用能量 < 3 → 遊戲結束
+    if (game.round > 1) {
+        const depletedPlayer = game.players.find(p => p.energy < 3);
+        if (depletedPlayer) {
+            showGameOver('文化演化終局 (資源耗盡)');
+            return;
+        }
+    }
 
     // 抽取隨機事件
     game.currentEvent = EVENTS[Math.floor(Math.random() * EVENTS.length)];
@@ -616,10 +721,17 @@ function startRound() {
     document.getElementById('game-phase').textContent = `第 ${game.round} 回合`;
 
     showScreen('event');
+    broadcastState('event');
 }
 
 document.getElementById('event-continue-btn').addEventListener('click', () => {
-    showHandover();
+    if (mpIsHost()) {
+        // 多裝置模式：主持人跳過交接畫面，直接廣播投資階段
+        showInvest();
+        broadcastState('invest');
+    } else {
+        showHandover();
+    }
 });
 
 // === 交接畫面 ===
@@ -627,6 +739,7 @@ function showHandover() {
     const player = game.players[game.currentIndex];
     document.getElementById('next-player-name').textContent = player.name;
     showScreen('handover');
+    broadcastState('handover');
 }
 
 document.getElementById('ready-btn').addEventListener('click', () => {
@@ -691,6 +804,7 @@ function showInvest() {
     }
 
     showScreen('invest');
+    // 注意：confirm-btn 的 disabled 狀態由 updateInvestUI() 管理，勿在此覆蓋
 }
 
 function updateMultiplierBadges(player) {
@@ -788,7 +902,7 @@ function updateInvestUI() {
         btn.disabled = true;
     } else {
         warning.classList.add('hidden');
-        btn.disabled = false;
+        btn.disabled = mpIsHost(); // 主持人模式永遠禁用，玩家/本機模式啟用
     }
 }
 
@@ -796,7 +910,22 @@ sliders.brain.addEventListener('input', updateInvestUI);
 sliders.guts.addEventListener('input', updateInvestUI);
 sliders.muscle.addEventListener('input', updateInvestUI);
 
-document.getElementById('confirm-btn').addEventListener('click', confirmInvest);
+document.getElementById('confirm-btn').addEventListener('click', () => {
+    const btn = document.getElementById('confirm-btn');
+    if (mpIsPlayer()) {
+        // 玩家模式：直接送出投資行動（主持人端的 mpProcessIncomingAction 有安全檢查）
+        const action = {
+            type:   'invest',
+            brain:  parseInt(sliders.brain.value)  || 0,
+            guts:   parseInt(sliders.guts.value)   || 0,
+            muscle: parseInt(sliders.muscle.value) || 0
+        };
+        btn.disabled = true; // 防止重複送出
+        mpSendAction(action);
+    } else if (!mpIsPlayer()) {
+        confirmInvest();
+    }
+});
 
 function confirmInvest() {
     const player = game.players[game.currentIndex];
@@ -836,8 +965,10 @@ function confirmInvest() {
     // 進入行動/技術階段的條件：有智慧 AP (可用於技術) 或有行動點 (可用於行動)
     if (player.currentAP > 0 || player.actionPoints > 0) {
         initActionPhase(player);
+        broadcastState('action');
     } else {
         finalizeTurn(player);
+        broadcastState('personalResult');
     }
 }
 
@@ -1594,8 +1725,28 @@ function initActionPhase(player) {
 
     document.getElementById('reset-action-btn').onclick = () => resetTempState(player);
 
+    // 主持人模式：禁用行動確認按鈕（等待玩家裝置送出行動）
+    document.getElementById('end-action-btn').disabled = mpIsHost();
+
     // 重新綁定確認按鈕，確保最新狀態
     document.getElementById('end-action-btn').onclick = () => {
+        // 玩家模式：序列化 tempState 送給主持人
+        if (mpIsPlayer() && mpIsMyTurn()) {
+            mpSendAction({
+                type:           'endAction',
+                energyChange:   tempState.energyChange,
+                defenseToAdd:   tempState.defenseToAdd,
+                unlockedTechs:  [...tempState.unlockedThisTurn],
+                techAP:         tempState.techAP,
+                remainingAP:    tempState.ap,
+                plunderTargets: [...tempState.plunderTargets],
+                allyTargets:    [...tempState.allyTargets],
+                punishTargets:  [...tempState.punishTargets]
+            });
+            return;
+        }
+
+        // 本機 / 主持人模式：原有邏輯
         // 1. 寫入行動結果
         player.actionPoints = tempState.ap; // 賸餘的行動點
         player.energy += tempState.energyChange;
@@ -1664,6 +1815,7 @@ function initActionPhase(player) {
     // 初始渲染
     updateActionUI();
     showScreen('action');
+    broadcastState('action');
 }
 
 function resetTempState(player) {
@@ -1999,11 +2151,15 @@ function showPersonalResult(player) {
 
     const isLast = game.currentIndex >= game.players.length - 1;
     document.getElementById('next-player-btn').textContent = isLast ? '查看結算' : '交給下一位';
+    // 主持人模式：由玩家裝置送出 nextPlayer 訊號，主持人端的按鈕停用
+    document.getElementById('next-player-btn').disabled = mpIsHost();
 
     showScreen('personalResult');
+    broadcastState('personalResult');
 }
 
 document.getElementById('next-player-btn').addEventListener('click', () => {
+    if (mpIsPlayer()) return; // 玩家模式由 mpApplyRemoteState 設定的 onclick 處理
     game.currentIndex++;
     if (game.currentIndex >= game.players.length) {
         showResult();
@@ -2013,6 +2169,18 @@ document.getElementById('next-player-btn').addEventListener('click', () => {
 });
 
 // === 結算畫面 ===
+// 依 game.resultColMask 屏蔽結算表格欄位（col 0=部落 永不屏蔽）
+function applyResultColMask() {
+    const mask = game.resultColMask || {};
+    // 欄位順序：部落、大腦、消化、肌肉、文化、收益、保留、下回合
+    const hide = [false, mask.brain, mask.guts, mask.muscle, mask.ccs, mask.action, mask.reserved, mask.next];
+    document.querySelectorAll('#result-table tr').forEach(row => {
+        row.querySelectorAll('th, td').forEach((cell, i) => {
+            cell.style.display = hide[i] ? 'none' : '';
+        });
+    });
+}
+
 function showResult() {
     document.getElementById('result-round').textContent = game.round;
     document.getElementById('game-phase').textContent = `第 ${game.round} 回合結算`;
@@ -2113,7 +2281,10 @@ function showResult() {
             <td>${nextTotal}</td>
         `;
         tbody.appendChild(row);
+    });
+    applyResultColMask();
 
+    game.players.forEach(p => {
         // 檢查盧比孔門檻 (Custom CCS)
         if (p.ccs >= game.targetCCS) {
             rubiconWinner = p;
@@ -2128,6 +2299,24 @@ function showResult() {
         return;
     }
 
+    // 終止條件2：第2回合起，任一玩家解鎖最高技術成就 (Tier 5) → 遊戲結束
+    if (game.round > 1) {
+        const maxTier = Math.max(...Object.values(TECH_CARDS).map(t => t.tier));
+        const techAchiever = game.players.find(p =>
+            p.unlockedTechs.some(id => TECH_CARDS[id] && TECH_CARDS[id].tier === maxTier)
+        );
+        if (techAchiever) {
+            const topTechId = techAchiever.unlockedTechs.find(id => TECH_CARDS[id] && TECH_CARDS[id].tier === maxTier);
+            const topTechName = TECH_CARDS[topTechId].name;
+            setTimeout(() => {
+                alert(`${techAchiever.name} 解鎖了最高技術成就「${topTechName}」，文化演化達到頂峰！`);
+                showGameOver('文化演化最終王者 (技術終局)');
+            }, 500);
+            return;
+        }
+    }
+
+    broadcastState('result');
     showScreen('result');
 }
 
@@ -2181,8 +2370,9 @@ function showVictoryScreen(winner) {
     showScreen('gameOver');
 }
 
-function showGameOver() {
-    document.querySelector('.subtitle').textContent = '文化演化最終王者';
+function showGameOver(reason) {
+    game._endReason = reason || '文化演化最終王者';
+    document.querySelector('.subtitle').textContent = game._endReason;
 
     const ranked = [...game.players].sort((a, b) => {
         if (b.ccs !== a.ccs) return b.ccs - a.ccs;
@@ -2209,6 +2399,7 @@ function showGameOver() {
     });
 
     showScreen('gameOver');
+    broadcastState('gameOver');
 }
 
 document.getElementById('restart-btn').addEventListener('click', () => {
@@ -2217,3 +2408,4 @@ document.getElementById('restart-btn').addEventListener('click', () => {
 
 // === 初始化 ===
 initSetup();
+mpInitOverlay();
