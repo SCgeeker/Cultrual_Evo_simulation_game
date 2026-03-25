@@ -196,7 +196,7 @@
         <ul>
             <li><strong>最大回合數</strong>：遊戲上限回合（預設 20）</li>
             <li><strong>勝利目標 (CCS)</strong>：文化複雜度勝利門檻（預設 30）</li>
-            <li><strong>每回合額外能量點（0–7）</strong>：第 2 回合起每回合額外補貼，建議試玩從 3 開始（預設 0）</li>
+            <li><strong>每回合額外能量點（0–7）</strong>：第 2 回合起每回合額外補貼（預設 5）；玩家若連續 3 回合行動+技術自給能量 &gt; 2，將不再獲得此補貼（🌿 自給標示）</li>
             <li><strong>強制消化投資</strong>：選用規則，每回合至少需投資 3 點消化才能確認</li>
         </ul>
     </li>
@@ -206,8 +206,9 @@
     <strong>⚡ 能量系統：</strong>
     <ul style="margin-top:8px;">
         <li><strong>第 1 回合</strong>：所有玩家獲得 10 點初始能量</li>
-        <li><strong>第 2 回合起</strong>：上回合保留（最多 5）＋技術被動收入＋每回合額外能量點</li>
+        <li><strong>第 2 回合起</strong>：上回合保留（最多 5）＋技術被動收入＋每回合額外能量點（若尚未自給）</li>
         <li><strong>最低保護</strong>：回合啟始不足 3 點時自動補至 3 點</li>
+        <li><strong>🌿 自給自足</strong>：若玩家連續 3 回合「行動獲得 ＋ 技術被動」能量合計 &gt; 2，將停止獲得每回合額外能量點——代表部落已能獨立生存</li>
     </ul>
 </div>
 
@@ -251,7 +252,7 @@
         <tr><td><span class="emoji">🧭</span> 探索</td><td>1 行動點</td><td>+2 能量</td><td>民俗生物學</td></tr>
         <tr><td><span class="emoji">⚔️</span> 掠奪</td><td>1 行動點</td><td>搶奪對手 2 能量（不可對盟友執行）</td><td>族群認同</td></tr>
         <tr><td><span class="emoji">🛡️</span> 防禦</td><td>1 行動點</td><td>抵消 1 次掠奪</td><td>族群認同</td></tr>
-        <tr><td><span class="emoji">🤝</span> 結盟</td><td>1 行動點</td><td>目標下回合 +1 能量；雙方永久封鎖互相掠奪</td><td>族群認同</td></tr>
+        <tr><td><span class="emoji">🤝</span> 結盟</td><td>1 行動點</td><td>提案者下回合 -1 能量，目標下回合 +1 能量；雙方永久封鎖互相掠奪</td><td>族群認同</td></tr>
         <tr><td><span class="emoji">⚖️</span> 懲罰（解盟）</td><td>1 行動點</td><td>解除結盟，目標 -1 能量；恢復掠奪資格</td><td>社會規範（只可對盟友執行）</td></tr>
     </tbody>
 </table>
@@ -444,7 +445,7 @@
 
 <footer>
     <p>文化演化賽局 | 基於《The Secret of Our Success》by Joseph Henrich</p>
-    <p>Version Phase 5 | 2026-03</p>
+    <p>Version Phase 5 | 2026-03-25</p>
 </footer>
 
 </body>

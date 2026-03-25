@@ -621,7 +621,9 @@ function startGame() {
             // === 回合資料 ===
             bids: { brain: 0, guts: 0, muscle: 0 },
             results: { ccs: 0, energy: 0, ap: 0, actions: 0 },
-            roundLog: { lost: 0, gained: 0 }
+            roundLog: { lost: 0, gained: 0 },
+            actionTechHistory: [],   // 最近3回合「行動+技術」能量紀錄
+            bonusExempt: false       // 連續3回合自給 >2 → 免除每回合額外能量點
         });
     }
     game.currentIndex = 0;
@@ -674,7 +676,8 @@ function startRound() {
         // 套用技術被動能量 + 每回合額外能量（第 2 回合起；第 1 回合初始能量由 startGame 設定）
         if (game.round > 1) {
             p.energy += TechTreeManager.getPassiveEnergy(p);
-            p.energy += game.bonusEnergy;
+            // 若玩家連續3回合行動+技術能量 >2，則不再獲得額外能量點
+            if (!p.bonusExempt) p.energy += game.bonusEnergy;
         }
 
     });
@@ -1464,7 +1467,7 @@ const TechTreeUI = {
                 enhanced_hunt: '🏹 強化狩獵（狩獵改為+2能量）',
                 plunder: '⚔️ 掠奪（搶奪對手2能量）',
                 defend: '🛡️ 防禦（抵消1次掠奪）',
-                alliance: '🤝 結盟（目標+1能量，取消雙方掠奪）',
+                alliance: '🤝 結盟（自-1能量，目標+1能量，取消雙方掠奪）',
                 punish: '⚖️ 懲罰（目標-1能量）',
                 explore: '🧭 探索（+2能量）'
             };
@@ -2089,7 +2092,7 @@ function performAction(type, targetIndex) {
         // 不立即獲得能量，於回合結束統一結算（可能被防禦阻擋）
         tempState.ap--;
     } else if (type === 'alliance') {
-        // 結盟：目標下回合 +1 能量，雙方取消互相掠奪（於結算時處理）
+        // 結盟：提案者下回合 -1 能量，目標下回合 +1 能量，雙方取消互相掠奪（於結算時處理）
         tempState.allyTargets.push({ targetIndex });
         tempState.counts.alliance++;
         tempState.ap--;
@@ -2200,7 +2203,7 @@ function showResult() {
     game.pendingPunishments = [];
 
     // ─── 2. 結盟結算（持久跨回合）───
-    // 雙方互加 allies[]，目標下回合 +1 能量
+    // 提案者下回合 -1 能量，目標下回合 +1 能量
     const allianceSet = new Set();
     game.pendingAlliances.forEach(a => {
         const key = [a.fromIndex, a.targetIndex].sort().join('-');
@@ -2211,6 +2214,9 @@ function showResult() {
             // 雙方互加 allies（去重）
             if (!from.allies.includes(a.targetIndex)) from.allies.push(a.targetIndex);
             if (!target.allies.includes(a.fromIndex)) target.allies.push(a.fromIndex);
+            // 結盟成本：提案者下回合 -1 能量
+            from.pendingEnergy -= 1;
+            from.roundLog.lost += 1;
             // 結盟禮物：目標下回合 +1 能量
             target.pendingEnergy += 1;
             target.roundLog.gained += 1;
@@ -2245,6 +2251,13 @@ function showResult() {
     // 清空佇列，避免重複計算
     game.pendingAttacks = [];
 
+    // 記錄各玩家本回合行動+技術能量，判斷是否連續3回合自給 >2
+    game.players.forEach(p => {
+        const earned = p.roundLog.gained + TechTreeManager.getPassiveEnergy(p);
+        p.actionTechHistory.push(earned);
+        if (p.actionTechHistory.length > 3) p.actionTechHistory.shift();
+        p.bonusExempt = p.actionTechHistory.length === 3 && p.actionTechHistory.every(v => v > 2);
+    });
 
     const winners = {
         brain: findWinner('brain'),
@@ -2260,7 +2273,8 @@ function showResult() {
     game.players.forEach(p => {
         const row = document.createElement('tr');
         // 總可用能量 (預測下回合起始：保留 + 技術被動能量 + 待處理調整)
-        let nextTotal = p.energy + TechTreeManager.getPassiveEnergy(p) + game.bonusEnergy + p.pendingEnergy;
+        const bonusForNext = p.bonusExempt ? 0 : game.bonusEnergy;
+        let nextTotal = p.energy + TechTreeManager.getPassiveEnergy(p) + bonusForNext + p.pendingEnergy;
         if (nextTotal < 0) nextTotal = 0;
 
         // 生成行動階段的描述字串
@@ -2271,7 +2285,7 @@ function showResult() {
         if (actionStr === '') actionStr = '+0';
 
         row.innerHTML = `
-            <td>${p.name}</td>
+            <td>${p.name}${p.bonusExempt ? ' <span title="連續3回合行動+技術能量>2，已不再獲得額外能量點" style="color:#ff9800;font-size:0.8em">🌿</span>' : ''}</td>
             <td>${p.bids.brain}${winners.brain === p.name ? ' ★' : ''}</td>
             <td>${p.bids.guts}${winners.guts === p.name ? ' ★' : ''}</td>
             <td>${p.bids.muscle}${winners.muscle === p.name ? ' ★' : ''}</td>
